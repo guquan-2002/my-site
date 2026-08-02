@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+
+import ProfileCard from '../components/ProfileCard';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { formatDate } from '../lib/date';
+import { getHomeDescription, getHomeTitle, profile } from '../lib/site';
+
+const notes = (await getCollection('notes')).sort(
+  (left, right) => right.data.date.getTime() - left.data.date.getTime(),
+);
+---
+
+<BaseLayout title={getHomeTitle()} description={getHomeDescription()}>
+  <main id="main-content">
+    <ProfileCard profile={profile} client:load />
+
+    <section class="notes" id="notes" aria-labelledby="notes-title">
+      <div class="section-heading">
+        <p aria-hidden="true">01</p>
+        <h2 id="notes-title">近记</h2>
+      </div>
+
+      {
+        notes.length === 0 ? (
+          <p class="notes-empty">此间尚无所记。</p>
+        ) : (
+          <ol class="notes-list">
+            {notes.map((note) => (
+              <li>
+                <a href={`/notes/${note.id}/`}>
+                  <div>
+                    <h3>{note.data.title}</h3>
+                    {note.data.summary && <p>{note.data.summary}</p>}
+                  </div>
+                  <time datetime={note.data.date.toISOString()}>
+                    {formatDate(note.data.date)}
+                  </time>
+                </a>
+              </li>
+            ))}
+          </ol>
+        )
+      }
+    </section>
+  </main>
+</BaseLayout>

@@ -1,0 +1,112 @@
+---
+import 'katex/dist/katex.min.css';
+import '../styles/global.css';
+
+import { getFullName, profile, SITE_URL } from '../lib/site';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  type?: 'website' | 'article';
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description,
+  canonicalPath = Astro.url.pathname,
+  type = 'website',
+  noindex = false,
+} = Astro.props;
+
+const canonicalUrl = new URL(canonicalPath, Astro.site || SITE_URL);
+const socialImageUrl = new URL('/og.png', Astro.site || SITE_URL);
+const fullName = getFullName();
+const sameAs = [profile.x?.url, profile.github?.url, profile.profileUrl].filter(Boolean);
+const personData = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.displayName,
+  alternateName: profile.pronunciation,
+  url: SITE_URL,
+  image: profile.avatarPath
+    ? new URL(profile.avatarPath, Astro.site || SITE_URL).toString()
+    : undefined,
+  description: profile.description,
+  sameAs: sameAs.length > 0 ? sameAs : undefined,
+};
+const copyrightName = profile.displayName || fullName || 'guquan2002.top';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@callmebill/lxgw-wenkai-web@latest/style.css"
+    />
+    {profile.avatarPath && <link rel="icon" href={profile.avatarPath} type="image/png" />}
+
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={fullName || 'guquan2002.top'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={socialImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${fullName || '梏权'} 的个人主页`} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageUrl} />
+
+    <title>{title}</title>
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(personData)} />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳至主要内容</a>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="site-brand" href="/" aria-label="返回主页">
+          <span>{profile.displayName || 'guquan2002.top'}</span>
+          {profile.pronunciation && <small>{profile.pronunciation}</small>}
+        </a>
+        <nav class="site-nav" aria-label="主导航">
+          <a href="/#notes">近记</a>
+          <a href="/#contact">联系</a>
+        </nav>
+      </header>
+
+      <slot />
+
+      <footer class="site-footer">
+        <p>© {new Date().getFullYear()} {copyrightName}</p>
+        <nav aria-label="页尾链接">
+          {profile.email && <a href={`mailto:${profile.email}`}>邮箱</a>}
+          {profile.x?.url && (
+            <a href={profile.x.url} target="_blank" rel="me noreferrer noopener">X</a>
+          )}
+          {profile.github?.url && (
+            <a href={profile.github.url} target="_blank" rel="me noreferrer noopener">
+              GitHub
+            </a>
+          )}
+          {profile.profileUrl && (
+            <a href={profile.profileUrl} target="_blank" rel="me noreferrer noopener">
+              Gravatar
+            </a>
+          )}
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>
