@@ -7,7 +7,7 @@ export function getFullName() {
 }
 
 export function getHomeTitle() {
-  return [getFullName(), profile.description].filter(Boolean).join('｜') || 'guquan2002.top';
+  return [profile.displayName, profile.description].filter(Boolean).join('｜') || 'guquan2002.top';
 }
 
 export function getHomeDescription() {

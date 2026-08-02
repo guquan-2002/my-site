@@ -5,7 +5,7 @@ import CodeCopyEnhancer from '../../components/CodeCopyEnhancer';
 import MermaidEnhancer from '../../components/MermaidEnhancer';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate } from '../../lib/date';
-import { getFullName, profile } from '../../lib/site';
+import { profile } from '../../lib/site';
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes');
@@ -22,8 +22,7 @@ interface Props {
 const { note } = Astro.props;
 const { Content } = await render(note);
 const hasMermaid = note.body?.includes('```mermaid') ?? false;
-const fullName = getFullName();
-const title = [note.data.title, fullName].filter(Boolean).join('｜');
+const title = [note.data.title, profile.displayName].filter(Boolean).join('｜');
 const description =
   note.data.summary ||
   [profile.displayName ? `${profile.displayName}的近记。` : undefined, note.data.title]

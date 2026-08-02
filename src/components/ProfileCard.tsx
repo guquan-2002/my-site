@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 interface Account {
   label: string;
   url: string;
@@ -18,24 +16,6 @@ interface Profile {
 }
 
 export default function ProfileCard({ profile }: { profile: Profile }) {
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-
-  useEffect(() => {
-    if (copyState === 'idle') return;
-    const timeout = window.setTimeout(() => setCopyState('idle'), 2200);
-    return () => window.clearTimeout(timeout);
-  }, [copyState]);
-
-  async function copyEmail() {
-    if (!profile.email) return;
-    try {
-      await navigator.clipboard.writeText(profile.email);
-      setCopyState('copied');
-    } catch {
-      setCopyState('failed');
-    }
-  }
-
   const accounts = [profile.x, profile.github].filter(
     (account): account is Account => Boolean(account?.url),
   );
@@ -56,18 +36,9 @@ export default function ProfileCard({ profile }: { profile: Profile }) {
 
         <div className="profile__contact" id="contact" aria-label="联系方式">
           {profile.email && (
-            <div className="email-actions">
-              <a className="contact-link contact-link--primary" href={`mailto:${profile.email}`}>
-                {profile.email}
-              </a>
-              <button className="copy-email" type="button" onClick={copyEmail}>
-                {copyState === 'copied'
-                  ? '已复制'
-                  : copyState === 'failed'
-                    ? '未复制'
-                    : '复制'}
-              </button>
-            </div>
+            <a className="contact-link contact-link--primary" href={`mailto:${profile.email}`}>
+              {profile.email}
+            </a>
           )}
 
           {(accounts.length > 0 || profile.profileUrl) && (

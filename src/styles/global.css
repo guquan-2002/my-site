@@ -22,7 +22,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 2rem;
+  scroll-padding-top: 7rem;
   background: var(--paper);
 }
 
@@ -101,11 +101,17 @@ select {
 }
 
 .site-header {
+  position: sticky;
+  z-index: 20;
+  top: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 6.5rem;
+  background: rgba(246, 242, 233, 0.9);
   border-bottom: 1px solid var(--line);
+  -webkit-backdrop-filter: blur(0.75rem);
+  backdrop-filter: blur(0.75rem);
 }
 
 .site-brand {
@@ -199,7 +205,10 @@ select {
   margin-top: 3rem;
 }
 
-.email-actions,
+.profile__contact > .contact-link {
+  justify-self: start;
+}
+
 .profile__links {
   display: flex;
   flex-wrap: wrap;
@@ -207,8 +216,7 @@ select {
   align-items: center;
 }
 
-.contact-link,
-.copy-email {
+.contact-link {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(251, 249, 244, 0.64);
@@ -227,13 +235,7 @@ select {
   background: var(--red-wash);
 }
 
-.copy-email {
-  padding: 0.7rem 0.8rem;
-  cursor: pointer;
-}
-
-.contact-link:hover,
-.copy-email:hover {
+.contact-link:hover {
   border-color: rgba(167, 56, 53, 0.55);
   color: var(--red-deep);
   background: rgba(205, 48, 43, 0.1);
@@ -547,6 +549,10 @@ select {
 }
 
 @media (max-width: 42rem) {
+  html {
+    scroll-padding-top: 5.5rem;
+  }
+
   .site-shell {
     width: min(calc(100% - 2rem), var(--content));
   }
@@ -573,10 +579,6 @@ select {
 
   .profile__contact {
     margin-top: 2.3rem;
-  }
-
-  .email-actions {
-    align-items: stretch;
   }
 
   .contact-link--primary {

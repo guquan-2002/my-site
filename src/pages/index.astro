@@ -13,7 +13,7 @@ const notes = (await getCollection('notes')).sort(
 
 <BaseLayout title={getHomeTitle()} description={getHomeDescription()}>
   <main id="main-content">
-    <ProfileCard profile={profile} client:load />
+    <ProfileCard profile={profile} />
 
     <section class="notes" id="notes" aria-labelledby="notes-title">
       <div class="section-heading">

@@ -55,7 +55,7 @@ const copyrightName = profile.displayName || fullName || 'guquan2002.top';
     {profile.avatarPath && <link rel="icon" href={profile.avatarPath} type="image/png" />}
 
     <meta property="og:type" content={type} />
-    <meta property="og:site_name" content={fullName || 'guquan2002.top'} />
+    <meta property="og:site_name" content={profile.displayName || 'guquan2002.top'} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
@@ -81,8 +81,8 @@ const copyrightName = profile.displayName || fullName || 'guquan2002.top';
           {profile.pronunciation && <small>{profile.pronunciation}</small>}
         </a>
         <nav class="site-nav" aria-label="主导航">
-          <a href="/#notes">近记</a>
           <a href="/#contact">联系</a>
+          <a href="/#notes">近记</a>
         </nav>
       </header>
 
