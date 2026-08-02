@@ -74,8 +74,8 @@ const copyrightName = profile.displayName || fullName || 'guquan2002.top';
   </head>
   <body>
     <a class="skip-link" href="#main-content">跳至主要内容</a>
-    <div class="site-shell">
-      <header class="site-header">
+    <header class="site-header">
+      <div class="site-header__inner">
         <a class="site-brand" href="/" aria-label="返回主页">
           <span>{profile.displayName || 'guquan2002.top'}</span>
           {profile.pronunciation && <small>{profile.pronunciation}</small>}
@@ -84,8 +84,10 @@ const copyrightName = profile.displayName || fullName || 'guquan2002.top';
           <a href="/#contact">联系</a>
           <a href="/#notes">近记</a>
         </nav>
-      </header>
+      </div>
+    </header>
 
+    <div class="site-shell">
       <slot />
 
       <footer class="site-footer">

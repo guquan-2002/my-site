@@ -22,7 +22,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 7rem;
+  scroll-padding-top: 5rem;
   background: var(--paper);
 }
 
@@ -104,14 +104,20 @@ select {
   position: sticky;
   z-index: 20;
   top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 6.5rem;
+  min-height: 4.5rem;
   background: rgba(246, 242, 233, 0.9);
   border-bottom: 1px solid var(--line);
   -webkit-backdrop-filter: blur(0.75rem);
   backdrop-filter: blur(0.75rem);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(calc(100% - 3rem), var(--content));
+  min-height: 4.5rem;
+  margin-inline: auto;
 }
 
 .site-brand {
@@ -549,16 +555,9 @@ select {
 }
 
 @media (max-width: 42rem) {
-  html {
-    scroll-padding-top: 5.5rem;
-  }
-
-  .site-shell {
+  .site-shell,
+  .site-header__inner {
     width: min(calc(100% - 2rem), var(--content));
-  }
-
-  .site-header {
-    min-height: 5rem;
   }
 
   .profile {
