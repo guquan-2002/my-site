@@ -1,68 +1,18 @@
-import { spawnSync } from 'node:child_process';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-import { fetch as undiciFetch } from 'undici';
+import { EnvHttpProxyAgent, fetch as undiciFetch } from 'undici';
 import { loadEnv } from 'vite';
 
 const PROFILE_IDENTIFIER = 'guquan2002';
 const VIRTUAL_MODULE_ID = 'virtual:gravatar-profile';
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
-const proxyUrl =
-  process.env.HTTPS_PROXY ||
-  process.env.https_proxy ||
-  process.env.HTTP_PROXY ||
-  process.env.http_proxy;
-function curlConfigValue(value) {
-  return String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"');
-}
+const dispatcher = new EnvHttpProxyAgent();
 
 function request(url, options = {}) {
-  if (proxyUrl) {
-    const headers = Object.entries(options.headers || {}).map(
-      ([name, value]) =>
-        `header = "${curlConfigValue(`${name}: ${value}`)}"`,
-    );
-    const curl = spawnSync(
-      'curl',
-      ['--config', '-'],
-      {
-        input: [
-          'silent',
-          'show-error',
-          'location',
-          'http1.1',
-          'doh-url = "https://1.1.1.1/dns-query"',
-          'max-time = 30',
-          'retry = 2',
-          'retry-all-errors',
-          'retry-delay = 1',
-          `url = "${curlConfigValue(url)}"`,
-          ...headers,
-          'write-out = "%{http_code}"',
-        ].join('\n'),
-        maxBuffer: 32 * 1024 * 1024,
-      },
-    );
-
-    const output = curl.stdout || Buffer.alloc(0);
-    const statusText = output.subarray(-3).toString('utf8');
-    const status = Number(statusText);
-
-    if (!Number.isInteger(status) || status < 100) {
-      const detail = curl.stderr?.toString('utf8').trim();
-      throw new Error(detail || 'Gravatar 网络请求失败。');
-    }
-
-    return Promise.resolve(
-      new Response(output.subarray(0, -3), {
-        status,
-      }),
-    );
-  }
-
   return undiciFetch(url, {
     ...options,
+    dispatcher,
   });
 }
 
@@ -95,7 +45,6 @@ async function syncAvatar(profile, publicDir) {
   const avatarFile = `${generatedDir}/avatar.png`;
 
   await mkdir(generatedDir, { recursive: true });
-  await rm(`${generatedDir}/avatar.jpg`, { force: true });
 
   if (!profile.avatar_url) {
     await rm(avatarFile, { force: true });
@@ -116,11 +65,16 @@ async function syncAvatar(profile, publicDir) {
 }
 
 function selectProfile(raw, avatarPath) {
+  const displayName = typeof raw.display_name === 'string' ? raw.display_name.trim() : '';
+  if (!displayName) {
+    throw new Error('Gravatar 公开资料缺少 display_name，无法生成站点。');
+  }
+
   const github = firstVisibleAccount(raw.verified_accounts, 'github');
   const x = firstVisibleAccount(raw.verified_accounts, 'twitter');
 
   return {
-    displayName: raw.display_name || undefined,
+    displayName,
     pronunciation: raw.pronunciation || undefined,
     description: raw.description || undefined,
     email: raw.contact_info?.email || undefined,

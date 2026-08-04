@@ -40,7 +40,7 @@ try {
   downloadFont(fontPath);
 
   const outputPath = fileURLToPath(new URL('../public/og.png', import.meta.url));
-  const name = profile.displayName || 'guquan2002.top';
+  const name = profile.displayName;
   const pronunciation = profile.pronunciation || '';
   const description = profile.description?.replace(/\s+/g, ' ').trim() || '';
 

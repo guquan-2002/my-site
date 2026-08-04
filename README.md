@@ -1,6 +1,6 @@
 # 梏权的个人主页
 
-这是 `guquan2002.top` 的源码。站点使用 Astro 静态生成，React 只用于少量交互，个人资料在每次构建时从 Gravatar 同步。
+这是 `guquan2002.top` 的源码。站点使用 Astro 静态生成，个人资料在每次构建时从 Gravatar 同步。
 
 ## 本地开发
 
@@ -34,7 +34,7 @@ npm run dev
 npm run build
 ```
 
-Gravatar API 无法访问时，构建会失败。资料字段不做内容校验：存在就展示，缺少就省略。
+Gravatar API 无法访问时，构建会失败。公开资料必须包含显示名称；其他资料字段可选，缺少就省略。
 
 社交预览图是 `public/og.png` 里的静态图片。Gravatar 姓名或简介变化后，先运行 `npm run check` 同步资料，再运行 `npm run generate:og` 重新生成。
 

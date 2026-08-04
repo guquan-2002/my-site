@@ -1,4 +1,3 @@
-import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import { unified } from '@astrojs/markdown-remark';
 import { defineConfig } from 'astro/config';
@@ -11,9 +10,8 @@ import remarkContentRules from './scripts/remark-content-rules.mjs';
 
 export default defineConfig({
   site: 'https://guquan2002.top',
-  output: 'static',
   trailingSlash: 'always',
-  integrations: [gravatarSync(), react(), sitemap()],
+  integrations: [gravatarSync(), sitemap()],
   markdown: {
     processor: unified({
       remarkPlugins: [remarkMath, remarkContentRules],

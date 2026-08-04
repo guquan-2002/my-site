@@ -1,13 +1,13 @@
 /// <reference types="astro/client" />
 
 declare module 'virtual:gravatar-profile' {
-  interface SocialAccount {
+  export interface SocialAccount {
     label: string;
     url: string;
   }
 
-  interface GravatarProfile {
-    displayName?: string;
+  export interface GravatarProfile {
+    displayName: string;
     pronunciation?: string;
     description?: string;
     email?: string;

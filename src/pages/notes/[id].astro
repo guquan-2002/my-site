@@ -1,8 +1,10 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 
-import CodeCopyEnhancer from '../../components/CodeCopyEnhancer';
-import MermaidEnhancer from '../../components/MermaidEnhancer';
+import 'katex/dist/katex.min.css';
+
+import CodeCopyEnhancer from '../../components/CodeCopyEnhancer.astro';
+import MermaidEnhancer from '../../components/MermaidEnhancer.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { formatDate } from '../../lib/date';
 import { profile } from '../../lib/site';
@@ -21,13 +23,8 @@ interface Props {
 
 const { note } = Astro.props;
 const { Content } = await render(note);
-const hasMermaid = note.body?.includes('```mermaid') ?? false;
-const title = [note.data.title, profile.displayName].filter(Boolean).join('｜');
-const description =
-  note.data.summary ||
-  [profile.displayName ? `${profile.displayName}的近记。` : undefined, note.data.title]
-    .filter(Boolean)
-    .join('');
+const title = `${note.data.title}｜${profile.displayName}`;
+const description = note.data.summary || `${profile.displayName}的近记。${note.data.title}`;
 ---
 
 <BaseLayout
@@ -49,7 +46,7 @@ const description =
         <Content />
       </div>
     </article>
-    <CodeCopyEnhancer client:load />
-    {hasMermaid && <MermaidEnhancer client:idle />}
+    <CodeCopyEnhancer />
+    <MermaidEnhancer />
   </main>
 </BaseLayout>
