@@ -27,10 +27,5 @@
     "@astrojs/check": "^0.9.10",
     "typescript": "^6.0.3",
     "wrangler": "4.119.0"
-  },
-  "overrides": {
-    "miniflare": {
-      "undici": "7.29.0"
-    }
   }
 }
