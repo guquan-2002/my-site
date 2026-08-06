@@ -1,7 +1,10 @@
 ---
 import '../styles/foundation.css';
 
+import { ClientRouter } from 'astro:transitions';
+
 import { getFullName, type Profile } from '../core/profile';
+import ThemeToggle from './ThemeToggle.astro';
 
 interface Props {
   profile: Profile;
@@ -45,6 +48,13 @@ const personData = {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      const storedTheme = localStorage.getItem('theme');
+      if (storedTheme === 'dark' || storedTheme === 'light') {
+        document.documentElement.dataset.theme = storedTheme;
+      }
+    </script>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonicalUrl} />
@@ -72,6 +82,7 @@ const personData = {
 
     <title>{title}</title>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(personData)} />
+    <ClientRouter />
   </head>
   <body>
     <a class="skip-link" href="#main-content">跳至主要内容</a>
@@ -81,10 +92,13 @@ const personData = {
           <span>{profile.displayName}</span>
           {profile.pronunciation && <small>{profile.pronunciation}</small>}
         </a>
-        <nav class="site-nav" aria-label="主导航">
-          <a href="/#contact">联系</a>
-          <a href="/#notes">近记</a>
-        </nav>
+        <div class="site-tools">
+          <ThemeToggle />
+          <nav class="site-nav" aria-label="主导航">
+            <a href="/#contact">联系</a>
+            <a href="/#notes">近记</a>
+          </nav>
+        </div>
       </div>
     </header>
 
@@ -111,6 +125,29 @@ const personData = {
         </nav>
       </footer>
     </div>
+
+    <script>
+      const setupReveal = () => {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+        );
+
+        document
+          .querySelectorAll('[data-reveal]:not(.is-visible)')
+          .forEach((target) => observer.observe(target));
+      };
+
+      setupReveal();
+      document.addEventListener('astro:page-load', setupReveal);
+    </script>
   </body>
 </html>
 
@@ -140,10 +177,11 @@ const personData = {
     z-index: 20;
     top: 0;
     min-height: 4.5rem;
-    background: rgba(246, 242, 233, 0.9);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
     border-bottom: 1px solid var(--line);
     -webkit-backdrop-filter: blur(0.75rem);
     backdrop-filter: blur(0.75rem);
+    transition: background-color 0.3s ease;
   }
 
   .site-header__inner {
@@ -171,6 +209,12 @@ const personData = {
     letter-spacing: 0.08em;
   }
 
+  .site-tools {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+  }
+
   .site-nav,
   .site-footer nav {
     display: flex;
@@ -180,8 +224,19 @@ const personData = {
 
   .site-nav a,
   .site-footer a {
+    padding-bottom: 0.12rem;
+    background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0%
+      1px;
     font-size: 0.9rem;
     text-decoration: none;
+    transition:
+      color 0.2s ease,
+      background-size 0.25s ease;
+  }
+
+  .site-nav a:hover,
+  .site-footer a:hover {
+    background-size: 100% 1px;
   }
 
   .site-footer {

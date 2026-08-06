@@ -13,7 +13,7 @@ const accounts = [profile.x, profile.github].filter(
 
 <section class="profile" aria-labelledby="profile-name">
   <div class="profile__words">
-    <div class="profile__identity">
+    <div class="profile__identity" data-reveal>
       <h1 id="profile-name">{profile.displayName}</h1>
       {profile.pronunciation && (
         <p class="profile__pronunciation">{profile.pronunciation}</p>
@@ -21,10 +21,18 @@ const accounts = [profile.x, profile.github].filter(
     </div>
 
     {profile.description && (
-      <p class="profile__description">{profile.description}</p>
+      <p class="profile__description" data-reveal style="--reveal-delay: 90ms">
+        {profile.description}
+      </p>
     )}
 
-    <div class="profile__contact" id="contact" aria-label="联系方式">
+    <div
+      class="profile__contact"
+      id="contact"
+      aria-label="联系方式"
+      data-reveal
+      style="--reveal-delay: 180ms"
+    >
       {profile.email && (
         <a class="contact-link contact-link--primary" href={`mailto:${profile.email}`}>
           {profile.email}
@@ -60,7 +68,12 @@ const accounts = [profile.x, profile.github].filter(
   </div>
 
   {profile.avatarPath && (
-    <div class="profile__portrait" aria-hidden={!profile.avatarAlt}>
+    <div
+      class="profile__portrait"
+      aria-hidden={!profile.avatarAlt}
+      data-reveal
+      style="--reveal-delay: 140ms"
+    >
       <img
         src={profile.avatarPath}
         width="256"
@@ -89,7 +102,7 @@ const accounts = [profile.x, profile.github].filter(
     right: -15%;
     width: 18rem;
     height: 18rem;
-    border: 1px solid rgba(167, 56, 53, 0.15);
+    border: 1px solid color-mix(in srgb, var(--red) 16%, transparent);
     border-radius: 50%;
     content: '';
   }
@@ -149,22 +162,28 @@ const accounts = [profile.x, profile.github].filter(
     padding: 0.7rem 0.95rem;
     border: 1px solid var(--line);
     border-radius: 999px;
-    background: rgba(251, 249, 244, 0.64);
+    background: color-mix(in srgb, var(--paper-bright) 64%, transparent);
     color: var(--ink);
     font-size: 0.88rem;
     line-height: 1;
     text-decoration: none;
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease,
+      background-color 0.2s ease,
+      translate 0.2s ease;
   }
 
   .contact-link--primary {
-    border-color: rgba(167, 56, 53, 0.22);
+    border-color: color-mix(in srgb, var(--red) 24%, transparent);
     background: var(--red-wash);
   }
 
   .contact-link:hover {
-    border-color: rgba(167, 56, 53, 0.55);
+    border-color: color-mix(in srgb, var(--red) 55%, transparent);
     color: var(--red-deep);
-    background: rgba(205, 48, 43, 0.1);
+    background: color-mix(in srgb, var(--red) 10%, transparent);
+    translate: 0 -1px;
   }
 
   .profile__portrait {
@@ -175,7 +194,7 @@ const accounts = [profile.x, profile.github].filter(
   .profile__portrait::before {
     position: absolute;
     inset: -0.55rem;
-    border: 1px solid rgba(167, 56, 53, 0.22);
+    border: 1px solid color-mix(in srgb, var(--red) 24%, transparent);
     border-radius: 50%;
     content: '';
   }

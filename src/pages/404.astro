@@ -10,9 +10,11 @@ import BaseLayout from '../ui/BaseLayout.astro';
   noindex
 >
   <main class="not-found" id="main-content">
-    <p class="not-found__mark" aria-hidden="true">404</p>
-    <h1>此路不通</h1>
-    <a href="/">返回主页 <span aria-hidden="true">→</span></a>
+    <p class="not-found__mark" aria-hidden="true" data-reveal>404</p>
+    <h1 data-reveal style="--reveal-delay: 70ms">此路不通</h1>
+    <a href="/" data-reveal style="--reveal-delay: 140ms">
+      返回主页 <span aria-hidden="true">→</span>
+    </a>
   </main>
 </BaseLayout>
 
@@ -39,6 +41,16 @@ import BaseLayout from '../ui/BaseLayout.astro';
   }
 
   .not-found a {
+    display: inline-block;
+    padding-bottom: 0.12rem;
+    background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0%
+      1px;
     color: var(--red-deep);
+    text-decoration: none;
+    transition: background-size 0.25s ease;
+  }
+
+  .not-found a:hover {
+    background-size: 100% 1px;
   }
 </style>

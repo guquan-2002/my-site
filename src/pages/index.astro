@@ -21,18 +21,18 @@ const notes = (await getCollection('notes')).sort(
     <ProfileCard profile={profile} />
 
     <section class="notes" id="notes" aria-labelledby="notes-title">
-      <div class="section-heading">
+      <div class="section-heading" data-reveal>
         <p aria-hidden="true">01</p>
         <h2 id="notes-title">近记</h2>
       </div>
 
       {
         notes.length === 0 ? (
-          <p class="notes-empty">此间尚无所记。</p>
+          <p class="notes-empty" data-reveal>此间尚无所记。</p>
         ) : (
           <ol class="notes-list">
-            {notes.map((note) => (
-              <li>
+            {notes.map((note, index) => (
+              <li data-reveal style={`--reveal-delay: ${Math.min(index, 10) * 60}ms`}>
                 <a href={`/notes/${note.id}/`}>
                   <div>
                     <h3>{note.data.title}</h3>
@@ -112,6 +112,14 @@ const notes = (await getCollection('notes')).sort(
     margin: 0;
     font-size: 1.3rem;
     font-weight: 600;
+    transition:
+      color 0.25s ease,
+      translate 0.25s ease;
+  }
+
+  .notes-list a:hover h3 {
+    color: var(--red-deep);
+    translate: 0.3rem 0;
   }
 
   .notes-list p {

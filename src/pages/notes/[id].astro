@@ -32,12 +32,23 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
   type="article"
 >
   <main class="note-page" id="main-content">
+    <div class="reading-progress" aria-hidden="true"></div>
     <article>
       <header class="note-header">
-        <a class="back-link" href="/#notes"><span aria-hidden="true">←</span> 近记</a>
-        <h1>{note.data.title}</h1>
-        <time datetime={note.data.date.toISOString()}>{formatDate(note.data.date)}</time>
-        {note.data.summary && <p>{note.data.summary}</p>}
+        <a class="back-link" href="/#notes" data-reveal>
+          <span aria-hidden="true">←</span> 近记
+        </a>
+        <h1 data-reveal style="--reveal-delay: 70ms">{note.data.title}</h1>
+        <time
+          datetime={note.data.date.toISOString()}
+          data-reveal
+          style="--reveal-delay: 140ms"
+        >
+          {formatDate(note.data.date)}
+        </time>
+        {note.data.summary && (
+          <p data-reveal style="--reveal-delay: 200ms">{note.data.summary}</p>
+        )}
       </header>
 
       <ArticleBody>
@@ -46,6 +57,33 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
     </article>
   </main>
 </BaseLayout>
+
+<script>
+  const updateProgress = () => {
+    const bar = document.querySelector<HTMLElement>('.reading-progress');
+    if (!bar) return;
+
+    const doc = document.documentElement;
+    const max = doc.scrollHeight - doc.clientHeight;
+    bar.style.setProperty('--progress', String(max > 0 ? doc.scrollTop / max : 0));
+  };
+
+  let progressTicking = false;
+  const requestProgressUpdate = () => {
+    if (progressTicking) return;
+    progressTicking = true;
+    window.requestAnimationFrame(() => {
+      updateProgress();
+      progressTicking = false;
+    });
+  };
+
+  window.addEventListener('scroll', requestProgressUpdate, { passive: true });
+  window.addEventListener('resize', requestProgressUpdate);
+  document.addEventListener('astro:page-load', updateProgress);
+
+  updateProgress();
+</script>
 
 <style>
   .note-page {
@@ -57,12 +95,32 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
     border-bottom: 1px solid var(--line);
   }
 
+  .reading-progress {
+    position: fixed;
+    z-index: 40;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0.18rem;
+    background: var(--red);
+    transform: scaleX(var(--progress, 0));
+    transform-origin: left center;
+  }
+
   .back-link {
     display: inline-block;
     margin-bottom: 3rem;
+    padding-bottom: 0.15rem;
+    background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0%
+      1px;
     color: var(--red-deep);
     font-size: 0.9rem;
     text-decoration: none;
+    transition: background-size 0.25s ease;
+  }
+
+  .back-link:hover {
+    background-size: 100% 1px;
   }
 
   .note-header h1 {
@@ -75,6 +133,7 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
   }
 
   .note-header time {
+    display: inline-block;
     color: var(--ink-soft);
     font-family: var(--font-mono);
     font-size: 0.78rem;

@@ -2,17 +2,21 @@
 import 'katex/dist/katex.min.css';
 ---
 
-<div class="prose" data-article-body>
+<div class="prose" data-article-body data-reveal>
   <slot />
 </div>
 
 <script>
-  const articles = document.querySelectorAll<HTMLElement>('[data-article-body]');
+  let mermaidApi: (typeof import('mermaid'))['default'] | null = null;
 
-  articles.forEach((article) => {
-    const codeBlocks = article.querySelectorAll<HTMLElement>('pre:not([data-diagram])');
+  const setupCopyButtons = () => {
+    const blocks = document.querySelectorAll<HTMLElement>(
+      '[data-article-body] pre:not([data-diagram])',
+    );
 
-    codeBlocks.forEach((block) => {
+    blocks.forEach((block) => {
+      if (block.querySelector('.copy-code')) return;
+
       const code = block.querySelector('code');
       if (!code) return;
 
@@ -39,37 +43,69 @@ import 'katex/dist/katex.min.css';
 
       block.append(button);
     });
+  };
+
+  const renderDiagrams = async () => {
+    const diagrams = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-article-body] [data-diagram="mermaid"]'),
+    );
+    if (diagrams.length === 0) return;
+
+    if (!mermaidApi) {
+      mermaidApi = (await import('mermaid')).default;
+    }
+
+    const styles = getComputedStyle(document.documentElement);
+    const token = (name: string) => styles.getPropertyValue(name).trim();
+
+    mermaidApi.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: 'base',
+      fontFamily: '"LXGW Wenkai", KaiTi, serif',
+      themeVariables: {
+        background: token('--paper'),
+        primaryColor: token('--red-pale'),
+        primaryTextColor: token('--ink'),
+        primaryBorderColor: token('--red'),
+        lineColor: token('--ink-soft'),
+        secondaryColor: token('--paper-muted'),
+        tertiaryColor: token('--paper-bright'),
+      },
+    });
+
+    diagrams.forEach((diagram) => {
+      if (diagram.dataset.source === undefined) {
+        diagram.dataset.source = diagram.textContent ?? '';
+      } else {
+        diagram.textContent = diagram.dataset.source;
+      }
+      diagram.removeAttribute('data-processed');
+    });
+
+    await mermaidApi.run({ nodes: diagrams });
+  };
+
+  let diagramRenderScheduled = false;
+  const scheduleDiagramRender = () => {
+    if (diagramRenderScheduled) return;
+    diagramRenderScheduled = true;
+    queueMicrotask(() => {
+      diagramRenderScheduled = false;
+      void renderDiagrams();
+    });
+  };
+
+  const setupArticleBody = () => {
+    setupCopyButtons();
+    scheduleDiagramRender();
+  };
+
+  setupArticleBody();
+  document.addEventListener('astro:page-load', setupArticleBody);
+  window.addEventListener('themechange', () => {
+    if (mermaidApi) scheduleDiagramRender();
   });
-
-  const diagrams = Array.from(
-    document.querySelectorAll<HTMLElement>('[data-article-body] [data-diagram="mermaid"]'),
-  );
-
-  if (diagrams.length > 0) {
-    void (async () => {
-      const { default: mermaid } = await import('mermaid');
-      const styles = getComputedStyle(document.documentElement);
-      const token = (name: string) => styles.getPropertyValue(name).trim();
-
-      mermaid.initialize({
-        startOnLoad: false,
-        securityLevel: 'strict',
-        theme: 'base',
-        fontFamily: '"LXGW Wenkai", KaiTi, serif',
-        themeVariables: {
-          background: token('--paper'),
-          primaryColor: token('--red-pale'),
-          primaryTextColor: token('--ink'),
-          primaryBorderColor: token('--red'),
-          lineColor: token('--ink-soft'),
-          secondaryColor: token('--paper-muted'),
-          tertiaryColor: token('--paper-bright'),
-        },
-      });
-
-      await mermaid.run({ nodes: diagrams });
-    })();
-  }
 </script>
 
 <style is:global>
@@ -108,10 +144,35 @@ import 'katex/dist/katex.min.css';
     margin-block: 1.35rem;
   }
 
+  .prose a {
+    padding-bottom: 0.12em;
+    background-image:
+      linear-gradient(currentColor, currentColor),
+      linear-gradient(
+        color-mix(in srgb, var(--red) 45%, transparent),
+        color-mix(in srgb, var(--red) 45%, transparent)
+      );
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    background-size:
+      0% 1px,
+      100% 1px;
+    text-decoration: none;
+    transition:
+      color 0.2s ease,
+      background-size 0.3s ease;
+  }
+
+  .prose a:hover {
+    background-size:
+      100% 1px,
+      100% 1px;
+  }
+
   .prose blockquote {
     margin-inline: 0;
     padding: 0.2rem 0 0.2rem 1.3rem;
-    border-left: 0.18rem solid rgba(167, 56, 53, 0.5);
+    border-left: 0.18rem solid color-mix(in srgb, var(--red) 50%, transparent);
     color: var(--ink-soft);
   }
 
@@ -166,16 +227,24 @@ import 'katex/dist/katex.min.css';
     top: 0.65rem;
     right: 0.65rem;
     padding: 0.35rem 0.58rem;
-    border: 1px solid rgba(62, 48, 43, 0.18);
+    border: 1px solid var(--line);
     border-radius: 0.32rem;
-    background: rgba(251, 249, 244, 0.92);
+    background: color-mix(in srgb, var(--paper-bright) 92%, transparent);
     color: var(--ink-soft);
     cursor: pointer;
     font-family: var(--font-main);
     font-size: 0.72rem;
     line-height: 1;
     opacity: 0;
-    transition: opacity 150ms ease;
+    transition:
+      opacity 150ms ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .prose .copy-code:hover {
+    border-color: var(--red);
+    color: var(--red-deep);
   }
 
   .prose pre:hover .copy-code,
@@ -184,7 +253,7 @@ import 'katex/dist/katex.min.css';
   }
 
   .prose pre[data-diagram='mermaid'] {
-    border-color: rgba(167, 56, 53, 0.2);
+    border-color: color-mix(in srgb, var(--red) 22%, transparent);
     background: var(--paper-bright);
     white-space: pre-wrap;
   }
