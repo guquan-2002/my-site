@@ -1,17 +1,22 @@
 ---
 import { getCollection } from 'astro:content';
 
-import ProfileCard from '../components/ProfileCard.astro';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { formatDate } from '../lib/date';
-import { getHomeDescription, getHomeTitle, profile } from '../lib/site';
+import { profile } from '../adapters/profile';
+import { formatDate } from '../core/date';
+import { getHomeDescription, getHomeTitle } from '../core/profile';
+import BaseLayout from '../ui/BaseLayout.astro';
+import ProfileCard from '../ui/ProfileCard.astro';
 
 const notes = (await getCollection('notes')).sort(
   (left, right) => right.data.date.getTime() - left.data.date.getTime(),
 );
 ---
 
-<BaseLayout title={getHomeTitle()} description={getHomeDescription()}>
+<BaseLayout
+  profile={profile}
+  title={getHomeTitle(profile)}
+  description={getHomeDescription(profile)}
+>
   <main id="main-content">
     <ProfileCard profile={profile} />
 
@@ -45,3 +50,86 @@ const notes = (await getCollection('notes')).sort(
     </section>
   </main>
 </BaseLayout>
+
+<style>
+  .notes {
+    padding: 1.5rem 0 7rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .section-heading {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    margin-bottom: 2rem;
+  }
+
+  .section-heading p {
+    margin: 0;
+    color: var(--red);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+
+  .section-heading h2 {
+    margin: 0;
+    font-size: clamp(2rem, 6vw, 3.1rem);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+  }
+
+  .notes-empty {
+    margin: 4rem 0 2rem;
+    color: var(--ink-soft);
+    font-size: 1.15rem;
+  }
+
+  .notes-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .notes-list li {
+    border-top: 1px solid var(--line);
+  }
+
+  .notes-list li:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .notes-list a {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1.6rem 0;
+    text-decoration: none;
+  }
+
+  .notes-list h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+
+  .notes-list p {
+    margin: 0.45rem 0 0;
+    color: var(--ink-soft);
+  }
+
+  .notes-list time {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 42rem) {
+    .notes-list a {
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+    }
+  }
+</style>

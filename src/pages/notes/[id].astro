@@ -1,13 +1,10 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 
-import 'katex/dist/katex.min.css';
-
-import CodeCopyEnhancer from '../../components/CodeCopyEnhancer.astro';
-import MermaidEnhancer from '../../components/MermaidEnhancer.astro';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { formatDate } from '../../lib/date';
-import { profile } from '../../lib/site';
+import { profile } from '../../adapters/profile';
+import { formatDate } from '../../core/date';
+import ArticleBody from '../../ui/ArticleBody.astro';
+import BaseLayout from '../../ui/BaseLayout.astro';
 
 export async function getStaticPaths() {
   const notes = await getCollection('notes');
@@ -28,6 +25,7 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
 ---
 
 <BaseLayout
+  profile={profile}
   title={title}
   description={description}
   canonicalPath={`/notes/${note.id}/`}
@@ -42,11 +40,51 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
         {note.data.summary && <p>{note.data.summary}</p>}
       </header>
 
-      <div class="prose">
+      <ArticleBody>
         <Content />
-      </div>
+      </ArticleBody>
     </article>
-    <CodeCopyEnhancer />
-    <MermaidEnhancer />
   </main>
 </BaseLayout>
+
+<style>
+  .note-page {
+    padding-block: clamp(4rem, 10vw, 7.5rem) 7rem;
+  }
+
+  .note-header {
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 3rem;
+    color: var(--red-deep);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .note-header h1 {
+    max-width: 40rem;
+    margin: 0 0 1.2rem;
+    font-size: clamp(2.7rem, 8vw, 5rem);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.05em;
+  }
+
+  .note-header time {
+    color: var(--ink-soft);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .note-header p {
+    max-width: 35rem;
+    margin: 1.5rem 0 0;
+    color: var(--ink-soft);
+    font-size: 1.14rem;
+  }
+</style>

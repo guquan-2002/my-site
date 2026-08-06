@@ -6,7 +6,7 @@ function textContent(node) {
   return node.children.map(textContent).join('');
 }
 
-export default function rehypeMermaidClient() {
+export default function rehypeMermaidBlocks() {
   return (tree) => {
     visit(tree, 'element', (node) => {
       if (node.tagName !== 'pre' || node.children?.length !== 1) return;
@@ -16,7 +16,7 @@ export default function rehypeMermaidClient() {
       const classes = Array.isArray(classNames) ? classNames : [classNames];
       if (code.tagName !== 'code' || !classes.includes('language-mermaid')) return;
 
-      node.properties = { className: ['mermaid'] };
+      node.properties = { dataDiagram: 'mermaid' };
       node.children = [{ type: 'text', value: textContent(code) }];
     });
   };

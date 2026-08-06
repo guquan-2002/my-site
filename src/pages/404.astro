@@ -1,12 +1,44 @@
 ---
-import { profile } from '../lib/site';
-import BaseLayout from '../layouts/BaseLayout.astro';
+import { profile } from '../adapters/profile';
+import BaseLayout from '../ui/BaseLayout.astro';
 ---
 
-<BaseLayout title={`此路不通｜${profile.displayName}`} description="页面不存在。" noindex>
+<BaseLayout
+  profile={profile}
+  title={`此路不通｜${profile.displayName}`}
+  description="页面不存在。"
+  noindex
+>
   <main class="not-found" id="main-content">
     <p class="not-found__mark" aria-hidden="true">404</p>
     <h1>此路不通</h1>
     <a href="/">返回主页 <span aria-hidden="true">→</span></a>
   </main>
 </BaseLayout>
+
+<style>
+  .not-found {
+    min-height: 36rem;
+    padding-block: clamp(5rem, 16vw, 10rem);
+  }
+
+  .not-found__mark {
+    margin: 0 0 0.7rem;
+    color: var(--red);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+  }
+
+  .not-found h1 {
+    margin: 0 0 2.5rem;
+    font-size: clamp(3.5rem, 12vw, 7rem);
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .not-found a {
+    color: var(--red-deep);
+  }
+</style>

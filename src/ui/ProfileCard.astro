@@ -1,0 +1,218 @@
+---
+import type { Profile, SocialAccount } from '../core/profile';
+
+interface Props {
+  profile: Profile;
+}
+
+const { profile } = Astro.props;
+const accounts = [profile.x, profile.github].filter(
+  (account): account is SocialAccount => Boolean(account?.url),
+);
+---
+
+<section class="profile" aria-labelledby="profile-name">
+  <div class="profile__words">
+    <div class="profile__identity">
+      <h1 id="profile-name">{profile.displayName}</h1>
+      {profile.pronunciation && (
+        <p class="profile__pronunciation">{profile.pronunciation}</p>
+      )}
+    </div>
+
+    {profile.description && (
+      <p class="profile__description">{profile.description}</p>
+    )}
+
+    <div class="profile__contact" id="contact" aria-label="联系方式">
+      {profile.email && (
+        <a class="contact-link contact-link--primary" href={`mailto:${profile.email}`}>
+          {profile.email}
+        </a>
+      )}
+
+      {(accounts.length > 0 || profile.profileUrl) && (
+        <nav class="profile__links" aria-label="外部主页">
+          {accounts.map((account) => (
+            <a
+              class="contact-link"
+              href={account.url}
+              rel="me noreferrer noopener"
+              target="_blank"
+            >
+              {account.label}
+              <span aria-hidden="true"> ↗</span>
+            </a>
+          ))}
+          {profile.profileUrl && (
+            <a
+              class="contact-link"
+              href={profile.profileUrl}
+              rel="me noreferrer noopener"
+              target="_blank"
+            >
+              Gravatar<span aria-hidden="true"> ↗</span>
+            </a>
+          )}
+        </nav>
+      )}
+    </div>
+  </div>
+
+  {profile.avatarPath && (
+    <div class="profile__portrait" aria-hidden={!profile.avatarAlt}>
+      <img
+        src={profile.avatarPath}
+        width="256"
+        height="256"
+        alt={profile.avatarAlt || ''}
+      />
+    </div>
+  )}
+</section>
+
+<style>
+  .profile {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: clamp(2rem, 8vw, 5.5rem);
+    align-items: start;
+    min-height: 34rem;
+    padding-block: clamp(5rem, 13vw, 8.5rem);
+  }
+
+  .profile::after {
+    position: absolute;
+    z-index: -1;
+    top: 18%;
+    right: -15%;
+    width: 18rem;
+    height: 18rem;
+    border: 1px solid rgba(167, 56, 53, 0.15);
+    border-radius: 50%;
+    content: '';
+  }
+
+  .profile__words {
+    min-width: 0;
+  }
+
+  .profile__identity {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1rem;
+    align-items: baseline;
+  }
+
+  .profile h1 {
+    margin: 0;
+    font-size: clamp(4rem, 13vw, 7.2rem);
+    font-weight: 400;
+    line-height: 0.96;
+    letter-spacing: -0.065em;
+  }
+
+  .profile__pronunciation {
+    margin: 0;
+    color: var(--red-deep);
+    font-size: 0.92rem;
+    letter-spacing: 0.13em;
+  }
+
+  .profile__description {
+    max-width: 29rem;
+    margin: 2.2rem 0 0;
+    font-size: clamp(1.35rem, 3.8vw, 1.8rem);
+    line-height: 1.55;
+    white-space: pre-line;
+  }
+
+  .profile__contact {
+    display: grid;
+    gap: 1rem;
+    margin-top: 3rem;
+  }
+
+  .profile__contact > .contact-link {
+    justify-self: start;
+  }
+
+  .profile__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    align-items: center;
+  }
+
+  .contact-link {
+    padding: 0.7rem 0.95rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(251, 249, 244, 0.64);
+    color: var(--ink);
+    font-size: 0.88rem;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .contact-link--primary {
+    border-color: rgba(167, 56, 53, 0.22);
+    background: var(--red-wash);
+  }
+
+  .contact-link:hover {
+    border-color: rgba(167, 56, 53, 0.55);
+    color: var(--red-deep);
+    background: rgba(205, 48, 43, 0.1);
+  }
+
+  .profile__portrait {
+    position: relative;
+    margin-top: 0.3rem;
+  }
+
+  .profile__portrait::before {
+    position: absolute;
+    inset: -0.55rem;
+    border: 1px solid rgba(167, 56, 53, 0.22);
+    border-radius: 50%;
+    content: '';
+  }
+
+  .profile__portrait img {
+    display: block;
+    width: clamp(5rem, 11vw, 6.5rem);
+    height: clamp(5rem, 11vw, 6.5rem);
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1.3rem 3.2rem rgba(79, 42, 36, 0.14);
+  }
+
+  @media (max-width: 42rem) {
+    .profile {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      min-height: 0;
+      padding-block: 4.5rem 5.5rem;
+    }
+
+    .profile__portrait {
+      grid-row: 1;
+      width: fit-content;
+    }
+
+    .profile h1 {
+      font-size: clamp(3.7rem, 22vw, 6rem);
+    }
+
+    .profile__contact {
+      margin-top: 2.3rem;
+    }
+
+    .contact-link--primary {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+  }
+</style>

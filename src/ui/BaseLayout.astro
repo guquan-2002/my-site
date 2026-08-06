@@ -1,9 +1,10 @@
 ---
-import '../styles/global.css';
+import '../styles/foundation.css';
 
-import { getFullName, profile } from '../lib/site';
+import { getFullName, type Profile } from '../core/profile';
 
 interface Props {
+  profile: Profile;
   title: string;
   description: string;
   canonicalPath?: string;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 const {
+  profile,
   title,
   description,
   canonicalPath = Astro.url.pathname,
@@ -22,7 +24,7 @@ const {
 const siteUrl = Astro.site!;
 const canonicalUrl = new URL(canonicalPath, siteUrl);
 const socialImageUrl = new URL('/og.png', siteUrl);
-const fullName = getFullName();
+const fullName = getFullName(profile);
 const sameAs = [profile.x?.url, profile.github?.url, profile.profileUrl].filter(Boolean);
 const personData = {
   '@context': 'https://schema.org',
@@ -111,3 +113,103 @@ const personData = {
     </div>
   </body>
 </html>
+
+<style>
+  .skip-link {
+    position: fixed;
+    z-index: 100;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.5rem 0.8rem;
+    color: var(--paper-bright);
+    background: var(--ink);
+    transform: translateY(-180%);
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  .site-shell {
+    width: min(calc(100% - 3rem), var(--content));
+    margin-inline: auto;
+  }
+
+  .site-header {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    min-height: 4.5rem;
+    background: rgba(246, 242, 233, 0.9);
+    border-bottom: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(0.75rem);
+    backdrop-filter: blur(0.75rem);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(calc(100% - 3rem), var(--content));
+    min-height: 4.5rem;
+    margin-inline: auto;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    gap: 0.65rem;
+    align-items: baseline;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.04em;
+  }
+
+  .site-brand small {
+    color: var(--ink-soft);
+    font-size: 0.76rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+  }
+
+  .site-nav,
+  .site-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+  }
+
+  .site-nav a,
+  .site-footer a {
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .site-footer {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 7.5rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+  }
+
+  .site-footer p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 42rem) {
+    .site-shell,
+    .site-header__inner {
+      width: min(calc(100% - 2rem), var(--content));
+    }
+
+    .site-footer {
+      align-items: flex-start;
+      flex-direction: column;
+      justify-content: center;
+      padding-block: 2rem;
+    }
+  }
+</style>

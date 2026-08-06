@@ -1,0 +1,212 @@
+---
+import 'katex/dist/katex.min.css';
+---
+
+<div class="prose" data-article-body>
+  <slot />
+</div>
+
+<script>
+  const articles = document.querySelectorAll<HTMLElement>('[data-article-body]');
+
+  articles.forEach((article) => {
+    const codeBlocks = article.querySelectorAll<HTMLElement>('pre:not([data-diagram])');
+
+    codeBlocks.forEach((block) => {
+      const code = block.querySelector('code');
+      if (!code) return;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'copy-code';
+      button.textContent = '复制';
+      button.setAttribute('aria-label', '复制代码');
+
+      let resetTimer = 0;
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code.textContent || '');
+          button.textContent = '已复制';
+        } catch {
+          button.textContent = '未复制';
+        }
+
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(() => {
+          button.textContent = '复制';
+        }, 2200);
+      });
+
+      block.append(button);
+    });
+  });
+
+  const diagrams = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-article-body] [data-diagram="mermaid"]'),
+  );
+
+  if (diagrams.length > 0) {
+    void (async () => {
+      const { default: mermaid } = await import('mermaid');
+      const styles = getComputedStyle(document.documentElement);
+      const token = (name: string) => styles.getPropertyValue(name).trim();
+
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: 'base',
+        fontFamily: '"LXGW Wenkai", KaiTi, serif',
+        themeVariables: {
+          background: token('--paper'),
+          primaryColor: token('--red-pale'),
+          primaryTextColor: token('--ink'),
+          primaryBorderColor: token('--red'),
+          lineColor: token('--ink-soft'),
+          secondaryColor: token('--paper-muted'),
+          tertiaryColor: token('--paper-bright'),
+        },
+      });
+
+      await mermaid.run({ nodes: diagrams });
+    })();
+  }
+</script>
+
+<style is:global>
+  .prose {
+    padding-top: 2.8rem;
+  }
+
+  .prose > :first-child {
+    margin-top: 0;
+  }
+
+  .prose h2,
+  .prose h3,
+  .prose h4 {
+    line-height: 1.35;
+    text-wrap: balance;
+  }
+
+  .prose h2 {
+    margin: 3.8rem 0 1.1rem;
+    font-size: 2rem;
+    font-weight: 500;
+  }
+
+  .prose h3 {
+    margin: 2.8rem 0 0.9rem;
+    font-size: 1.45rem;
+  }
+
+  .prose p,
+  .prose ul,
+  .prose ol,
+  .prose blockquote,
+  .prose table,
+  .prose pre {
+    margin-block: 1.35rem;
+  }
+
+  .prose blockquote {
+    margin-inline: 0;
+    padding: 0.2rem 0 0.2rem 1.3rem;
+    border-left: 0.18rem solid rgba(167, 56, 53, 0.5);
+    color: var(--ink-soft);
+  }
+
+  .prose img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 2rem auto;
+    border-radius: 0.4rem;
+  }
+
+  .prose table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  .prose th,
+  .prose td {
+    padding: 0.65rem 0.8rem;
+    border: 1px solid var(--line);
+    text-align: left;
+  }
+
+  .prose :not(pre) > code {
+    padding: 0.08em 0.34em;
+    border-radius: 0.25rem;
+    background: var(--red-faint);
+    color: var(--red-deep);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  .prose pre {
+    position: relative;
+    overflow-x: auto;
+    padding: 1.3rem 1.4rem;
+    border: 1px solid var(--line);
+    border-radius: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .prose pre code {
+    font-family: inherit;
+  }
+
+  .prose .copy-code {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.65rem;
+    padding: 0.35rem 0.58rem;
+    border: 1px solid rgba(62, 48, 43, 0.18);
+    border-radius: 0.32rem;
+    background: rgba(251, 249, 244, 0.92);
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-size: 0.72rem;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 150ms ease;
+  }
+
+  .prose pre:hover .copy-code,
+  .prose .copy-code:focus-visible {
+    opacity: 1;
+  }
+
+  .prose pre[data-diagram='mermaid'] {
+    border-color: rgba(167, 56, 53, 0.2);
+    background: var(--paper-bright);
+    white-space: pre-wrap;
+  }
+
+  .prose pre[data-diagram='mermaid'] svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  .prose .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-block: 0.4rem;
+  }
+
+  .prose .footnotes {
+    margin-top: 4rem;
+    padding-top: 1.3rem;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+  }
+</style>

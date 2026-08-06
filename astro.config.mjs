@@ -4,20 +4,20 @@ import { defineConfig } from 'astro/config';
 import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 
-import gravatarSync from './scripts/gravatar-integration.mjs';
-import rehypeMermaidClient from './scripts/rehype-mermaid-client.mjs';
-import remarkContentRules from './scripts/remark-content-rules.mjs';
+import rehypeMermaidBlocks from './build/markdown/mermaid-blocks.mjs';
+import remarkContentRules from './build/markdown/content-rules.mjs';
+import { siteConfig } from './site.config.mjs';
 
 export default defineConfig({
-  site: 'https://guquan2002.top',
+  site: siteConfig.url,
   trailingSlash: 'always',
-  integrations: [gravatarSync(), sitemap()],
+  integrations: [sitemap()],
   markdown: {
     processor: unified({
       remarkPlugins: [remarkMath, remarkContentRules],
       rehypePlugins: [
         [rehypeKatex, { output: 'htmlAndMathml' }],
-        rehypeMermaidClient,
+        rehypeMermaidBlocks,
       ],
       remarkRehype: {
         footnoteLabel: '脚注',

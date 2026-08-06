@@ -2,11 +2,9 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 import { EnvHttpProxyAgent, fetch as undiciFetch } from 'undici';
-import { loadEnv } from 'vite';
 
-const PROFILE_IDENTIFIER = 'guquan2002';
-const VIRTUAL_MODULE_ID = 'virtual:gravatar-profile';
-const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
+import { siteConfig } from '../site.config.mjs';
+
 const dispatcher = new EnvHttpProxyAgent();
 
 function request(url, options = {}) {
@@ -24,7 +22,7 @@ function firstVisibleAccount(accounts, serviceType) {
 
 async function fetchProfile(apiKey) {
   const response = await request(
-    `https://api.gravatar.com/v3/profiles/${PROFILE_IDENTIFIER}`,
+    `https://api.gravatar.com/v3/profiles/${siteConfig.profileIdentifier}`,
     {
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -40,8 +38,8 @@ async function fetchProfile(apiKey) {
   return response.json();
 }
 
-async function syncAvatar(profile, publicDir) {
-  const generatedDir = fileURLToPath(new URL('./generated/', publicDir));
+async function syncAvatar(profile) {
+  const generatedDir = fileURLToPath(new URL('../public/generated/', import.meta.url));
   const avatarFile = `${generatedDir}/avatar.png`;
 
   await mkdir(generatedDir, { recursive: true });
@@ -67,7 +65,7 @@ async function syncAvatar(profile, publicDir) {
 function selectProfile(raw, avatarPath) {
   const displayName = typeof raw.display_name === 'string' ? raw.display_name.trim() : '';
   if (!displayName) {
-    throw new Error('Gravatar 公开资料缺少 display_name，无法生成站点。');
+    throw new Error('Gravatar 公开资料缺少 display_name，无法同步个人资料。');
   }
 
   const github = firstVisibleAccount(raw.verified_accounts, 'github');
@@ -88,51 +86,17 @@ function selectProfile(raw, avatarPath) {
   };
 }
 
-export default function gravatarSync() {
-  return {
-    name: 'guquan-gravatar-sync',
-    hooks: {
-      'astro:config:setup': async ({ config, mode, updateConfig, logger }) => {
-        const rootPath = fileURLToPath(config.root);
-        const fileEnv = loadEnv(mode, rootPath, '');
-        const apiKey = process.env.GRAVATAR_API_KEY || fileEnv.GRAVATAR_API_KEY;
-
-        if (!apiKey) {
-          throw new Error('缺少 GRAVATAR_API_KEY，无法同步个人资料。');
-        }
-
-        const rawProfile = await fetchProfile(apiKey);
-        const avatarPath = await syncAvatar(rawProfile, config.publicDir);
-        const profile = selectProfile(rawProfile, avatarPath);
-        const source = `export default ${JSON.stringify(profile)};`;
-        const cacheDir = `${rootPath}/.cache`;
-
-        await mkdir(cacheDir, { recursive: true });
-        await writeFile(
-          `${cacheDir}/gravatar-profile.json`,
-          `${JSON.stringify(profile, null, 2)}\n`,
-        );
-
-        updateConfig({
-          vite: {
-            plugins: [
-              {
-                name: 'guquan-gravatar-profile-module',
-                resolveId(id) {
-                  return id === VIRTUAL_MODULE_ID
-                    ? RESOLVED_VIRTUAL_MODULE_ID
-                    : undefined;
-                },
-                load(id) {
-                  return id === RESOLVED_VIRTUAL_MODULE_ID ? source : undefined;
-                },
-              },
-            ],
-          },
-        });
-
-        logger.info('已从 Gravatar 同步公开资料。');
-      },
-    },
-  };
+const apiKey = process.env.GRAVATAR_API_KEY;
+if (!apiKey) {
+  throw new Error('缺少 GRAVATAR_API_KEY，无法同步个人资料。');
 }
+
+const rawProfile = await fetchProfile(apiKey);
+const avatarPath = await syncAvatar(rawProfile);
+const profile = selectProfile(rawProfile, avatarPath);
+const outputPath = fileURLToPath(
+  new URL('../src/generated/profile.json', import.meta.url),
+);
+
+await writeFile(outputPath, `${JSON.stringify(profile, null, 2)}\n`);
+console.log(`已同步个人资料至 ${outputPath}`);

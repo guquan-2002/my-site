@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { siteConfig } from '../site.config.mjs';
+
 const FONT_URL =
   'https://raw.githubusercontent.com/lxgw/LxgwWenKai/main/fonts/TTF/LXGWWenKai-Regular.ttf';
 
@@ -32,10 +34,10 @@ function downloadFont(path) {
 const tempDir = await mkdtemp(join(tmpdir(), 'guquan-og-'));
 
 try {
-  const profileCachePath = fileURLToPath(
-    new URL('../.cache/gravatar-profile.json', import.meta.url),
+  const profilePath = fileURLToPath(
+    new URL('../src/generated/profile.json', import.meta.url),
   );
-  const profile = JSON.parse(await readFile(profileCachePath, 'utf8'));
+  const profile = JSON.parse(await readFile(profilePath, 'utf8'));
   const fontPath = join(tempDir, 'LXGWWenKai-Regular.ttf');
   downloadFont(fontPath);
 
@@ -93,7 +95,7 @@ try {
       '24',
       '-annotate',
       '+108+536',
-      'guquan2002.top',
+      new URL(siteConfig.url).hostname,
       '-fill',
       '#a73835',
       '-draw',
