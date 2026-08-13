@@ -116,6 +116,30 @@ a:hover {
   outline-offset: 0.24rem;
 }
 
+html {
+  scrollbar-color: color-mix(in srgb, var(--red) 42%, var(--paper-muted)) var(--paper);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--paper);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 0.16rem solid var(--paper);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--red) 38%, var(--paper-muted));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--red);
+}
+
 button,
 input,
 textarea,
