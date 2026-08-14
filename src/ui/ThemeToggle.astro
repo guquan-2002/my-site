@@ -42,7 +42,17 @@
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (document.startViewTransition && !reduceMotion) {
-      document.startViewTransition(applyTheme);
+      const rect = toggle.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      root.style.setProperty('--ink-x', `${x}px`);
+      root.style.setProperty('--ink-y', `${y}px`);
+      root.dataset.themeTransition = 'true';
+
+      const transition = document.startViewTransition(applyTheme);
+      transition.finished.finally(() => {
+        delete root.dataset.themeTransition;
+      });
     } else {
       applyTheme();
     }

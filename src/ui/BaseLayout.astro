@@ -85,6 +85,7 @@ const personData = {
     <ClientRouter />
   </head>
   <body>
+    <div class="page-glow" aria-hidden="true"></div>
     <a class="skip-link" href="#main-content">跳至主要内容</a>
     <header class="site-header">
       <div class="site-header__inner">
@@ -150,13 +151,19 @@ const personData = {
     </button>
 
     <script>
+      let revealObserver: IntersectionObserver | null = null;
+      let curtainObserver: IntersectionObserver | null = null;
+
       const setupReveal = () => {
-        const observer = new IntersectionObserver(
+        revealObserver?.disconnect();
+        curtainObserver?.disconnect();
+
+        revealObserver = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
+                revealObserver?.unobserve(entry.target);
               }
             });
           },
@@ -164,41 +171,137 @@ const personData = {
         );
 
         document
-          .querySelectorAll('[data-reveal]:not(.is-visible)')
-          .forEach((target) => observer.observe(target));
+          .querySelectorAll(
+            '[data-reveal]:not(.is-visible):not(.reveal-curtain), [data-reveal-split]:not(.is-visible)',
+          )
+          .forEach((target) => revealObserver?.observe(target));
+
+        // reveal-curtain 初始会被 clip-path 完全裁掉，IntersectionObserver 会因此
+        // 判定为不可见而无法触发。对这类元素改用 threshold: 0 观察，再按 isIntersecting
+        // 决定是否显示，这样 clip-path 裁剪也能正确触发。
+        curtainObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                curtainObserver?.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0 },
+        );
+
+        document
+          .querySelectorAll(
+            '[data-reveal].reveal-curtain:not(.is-visible)',
+          )
+          .forEach((target) => curtainObserver?.observe(target));
       };
 
       setupReveal();
       document.addEventListener('astro:page-load', setupReveal);
 
+      // ---- 全局鼠标光晕 ----
+      const initPageGlow = () => {
+        const root = document.documentElement;
+        if (root.dataset.pageGlowBound) return;
+        root.dataset.pageGlowBound = 'true';
+
+        if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+        let glowFrame = 0;
+        document.addEventListener(
+          'mousemove',
+          (event) => {
+            cancelAnimationFrame(glowFrame);
+            glowFrame = requestAnimationFrame(() => {
+              root.style.setProperty('--page-glow-x', `${event.clientX}px`);
+              root.style.setProperty('--page-glow-y', `${event.clientY}px`);
+            });
+          },
+          { passive: true },
+        );
+      };
+
+      initPageGlow();
+
       // ---- 头部随滚动收缩、返回顶部进度环、导航高亮 ----
       const CHROME_CIRCUMFERENCE = 2 * Math.PI * 16.5;
 
+      let chromeHeader: HTMLElement | null = null;
+      let chromeBackToTop: HTMLButtonElement | null = null;
+      let chromeRing: SVGCircleElement | null = null;
+      let chromeNavLinks: HTMLAnchorElement[] = [];
+      let chromeNavSections: Array<{ link: HTMLAnchorElement; section: HTMLElement }> = [];
+      let chromeMaxScroll = 0;
       let chromeTicking = false;
+      let chromeScrolled: boolean | null = null;
+      let chromeBackVisible: boolean | null = null;
+      let chromeActiveLink: HTMLAnchorElement | null = null;
+      let chromeLastDashOffset = -1;
+      let chromeLastNavUpdate = 0;
+
+      const cacheChrome = () => {
+        chromeHeader = document.querySelector<HTMLElement>('.site-header');
+        chromeBackToTop = document.querySelector<HTMLButtonElement>('[data-back-to-top]');
+        chromeRing = document.querySelector<SVGCircleElement>('.back-to-top__progress');
+        chromeNavLinks = Array.from(
+          document.querySelectorAll<HTMLAnchorElement>('.site-nav a[href^="/#"]'),
+        );
+        chromeNavSections = chromeNavLinks.flatMap((link) => {
+          const id = (link.getAttribute('href') || '').split('#')[1];
+          const section = id ? document.getElementById(id) : null;
+          return section ? [{ link, section }] : [];
+        });
+        chromeMaxScroll = Math.max(
+          document.documentElement.scrollHeight - document.documentElement.clientHeight,
+          0,
+        );
+      };
+
       const updateChrome = () => {
         chromeTicking = false;
 
-        const header = document.querySelector<HTMLElement>('.site-header');
-        const backToTop = document.querySelector<HTMLButtonElement>('[data-back-to-top]');
-        const ring = document.querySelector<SVGCircleElement>('.back-to-top__progress');
-
         const y = window.scrollY;
-        header?.classList.toggle('is-scrolled', y > 8);
-        backToTop?.classList.toggle('is-visible', y > 480);
 
-        const doc = document.documentElement;
-        const max = doc.scrollHeight - doc.clientHeight;
-        const ratio = max > 0 ? Math.min(y / max, 1) : 0;
-        if (ring) ring.style.strokeDashoffset = String(CHROME_CIRCUMFERENCE * (1 - ratio));
+        const scrolled = y > 8;
+        if (scrolled !== chromeScrolled) {
+          chromeScrolled = scrolled;
+          chromeHeader?.classList.toggle('is-scrolled', scrolled);
+        }
 
-        const links = document.querySelectorAll<HTMLAnchorElement>('.site-nav a[href^="/#"]');
+        const backVisible = y > 480;
+        if (backVisible !== chromeBackVisible) {
+          chromeBackVisible = backVisible;
+          chromeBackToTop?.classList.toggle('is-visible', backVisible);
+        }
+
+        const ratio = chromeMaxScroll > 0 ? Math.min(y / chromeMaxScroll, 1) : 0;
+        const dashOffset = CHROME_CIRCUMFERENCE * (1 - ratio);
+        if (chromeRing && Math.abs(dashOffset - chromeLastDashOffset) > 0.5) {
+          chromeLastDashOffset = dashOffset;
+          chromeRing.style.strokeDashoffset = String(dashOffset);
+        }
+
+        const now = performance.now();
+        if (now - chromeLastNavUpdate > 120) {
+          chromeLastNavUpdate = now;
+          updateNavActive();
+        }
+      };
+
+      const updateNavActive = () => {
         let current: HTMLAnchorElement | null = null;
-        links.forEach((link) => {
-          const id = (link.getAttribute('href') || '').split('#')[1];
-          const el = id ? document.getElementById(id) : null;
-          if (el && el.getBoundingClientRect().top <= 140) current = link;
-        });
-        links.forEach((link) => link.classList.toggle('is-active', link === current));
+        for (let i = 0; i < chromeNavSections.length; i += 1) {
+          const { link, section } = chromeNavSections[i];
+          if (section.getBoundingClientRect().top <= 140) current = link;
+        }
+        if (current !== chromeActiveLink) {
+          chromeActiveLink = current;
+          for (let i = 0; i < chromeNavLinks.length; i += 1) {
+            chromeNavLinks[i].classList.toggle('is-active', chromeNavLinks[i] === current);
+          }
+        }
       };
 
       const requestChromeUpdate = () => {
@@ -208,15 +311,23 @@ const personData = {
       };
 
       const initChrome = () => {
-        const backToTop = document.querySelector<HTMLButtonElement>('[data-back-to-top]');
-        const ring = document.querySelector<SVGCircleElement>('.back-to-top__progress');
-        if (ring) {
-          ring.style.strokeDasharray = String(CHROME_CIRCUMFERENCE);
-          ring.style.strokeDashoffset = String(CHROME_CIRCUMFERENCE);
+        cacheChrome();
+        chromeScrolled = null;
+        chromeBackVisible = null;
+        chromeActiveLink = null;
+        chromeLastDashOffset = -1;
+        chromeLastNavUpdate = 0;
+        if (chromeRing) {
+          chromeRing.style.strokeDasharray = String(CHROME_CIRCUMFERENCE);
+          chromeRing.style.strokeDashoffset = String(CHROME_CIRCUMFERENCE);
         }
-        backToTop?.addEventListener('click', () => {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        if (chromeBackToTop && !chromeBackToTop.dataset.chromeBound) {
+          chromeBackToTop.dataset.chromeBound = 'true';
+          chromeBackToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        }
+        updateNavActive();
         updateChrome();
       };
 
@@ -244,7 +355,29 @@ const personData = {
     transform: translateY(0);
   }
 
+  .page-glow {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      36rem 36rem at var(--page-glow-x, 50%) var(--page-glow-y, 40%),
+      var(--cinnabar-glow),
+      transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .page-glow {
+      opacity: 1;
+    }
+  }
+
   .site-shell {
+    position: relative;
+    z-index: 1;
     width: min(calc(100% - 3rem), var(--content));
     margin-inline: auto;
   }
@@ -254,20 +387,16 @@ const personData = {
     z-index: 20;
     top: 0;
     min-height: 4.5rem;
-    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
     border-bottom: 1px solid var(--line);
-    -webkit-backdrop-filter: blur(0.75rem);
-    backdrop-filter: blur(0.75rem);
     transition:
-      min-height 0.3s ease,
       background-color 0.3s ease,
       box-shadow 0.3s ease;
   }
 
   .site-header.is-scrolled {
-    min-height: 3.6rem;
-    background: color-mix(in srgb, var(--paper) 93%, transparent);
-    box-shadow: 0 0.6rem 1.6rem -0.9rem rgba(62, 48, 43, 0.22);
+    background: color-mix(in srgb, var(--paper) 98%, transparent);
+    box-shadow: 0 0.6rem 1.6rem -0.9rem var(--header-shadow);
   }
 
   .site-header__inner {
@@ -277,11 +406,6 @@ const personData = {
     width: min(calc(100% - 3rem), var(--content));
     min-height: 4.5rem;
     margin-inline: auto;
-    transition: min-height 0.3s ease;
-  }
-
-  .site-header.is-scrolled .site-header__inner {
-    min-height: 3.6rem;
   }
 
   .site-brand {
@@ -362,11 +486,9 @@ const personData = {
     padding: 0;
     border: 1px solid var(--line);
     border-radius: 50%;
-    background: color-mix(in srgb, var(--paper-bright) 88%, transparent);
+    background: var(--paper-bright);
     color: var(--ink-soft);
     cursor: pointer;
-    -webkit-backdrop-filter: blur(0.5rem);
-    backdrop-filter: blur(0.5rem);
     opacity: 0;
     visibility: hidden;
     transform: translateY(0.6rem);

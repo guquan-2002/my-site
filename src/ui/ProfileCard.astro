@@ -13,15 +13,17 @@ const accounts = [profile.x, profile.github].filter(
 
 <section class="profile" aria-labelledby="profile-name">
   <div class="profile__words">
-    <div class="profile__identity" data-reveal>
-      <h1 id="profile-name">{profile.displayName}</h1>
+    <div class="profile__identity">
+      <h1 id="profile-name" data-reveal class="reveal-curtain">{profile.displayName}</h1>
       {profile.pronunciation && (
-        <p class="profile__pronunciation">{profile.pronunciation}</p>
+        <p class="profile__pronunciation" data-reveal style="--reveal-delay: 70ms">
+          {profile.pronunciation}
+        </p>
       )}
     </div>
 
     {profile.description && (
-      <p class="profile__description" data-reveal style="--reveal-delay: 90ms">
+      <p class="profile__description" data-reveal-split>
         {profile.description}
       </p>
     )}
@@ -95,19 +97,9 @@ const accounts = [profile.x, profile.github].filter(
     padding-block: clamp(5rem, 13vw, 8.5rem);
   }
 
-  .profile::after {
-    position: absolute;
-    z-index: -1;
-    top: 18%;
-    right: -15%;
-    width: 18rem;
-    height: 18rem;
-    border: 1px solid color-mix(in srgb, var(--red) 16%, transparent);
-    border-radius: 50%;
-    content: '';
-  }
-
   .profile__words {
+    position: relative;
+    z-index: 1;
     min-width: 0;
   }
 
@@ -183,20 +175,24 @@ const accounts = [profile.x, profile.github].filter(
     border-color: color-mix(in srgb, var(--red) 55%, transparent);
     color: var(--red-deep);
     background: color-mix(in srgb, var(--red) 10%, transparent);
+    box-shadow: 0 0.7rem 1.7rem -0.7rem rgba(167, 56, 53, 0.28);
     translate: 0 -1px;
   }
 
   .profile__portrait {
     position: relative;
+    z-index: 1;
     margin-top: 0.3rem;
   }
 
   .profile__portrait::before {
     position: absolute;
     inset: -0.55rem;
-    border: 1px solid color-mix(in srgb, var(--red) 24%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--red) 34%, transparent);
     border-radius: 50%;
     content: '';
+    transform: rotate(var(--ring-rotate, 0deg));
+    will-change: transform;
   }
 
   .profile__portrait img {
@@ -205,7 +201,9 @@ const accounts = [profile.x, profile.github].filter(
     height: clamp(5rem, 11vw, 6.5rem);
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 1.3rem 3.2rem rgba(79, 42, 36, 0.14);
+    box-shadow:
+      0 1rem 2rem -0.55rem rgba(79, 42, 36, 0.18),
+      0 2.6rem 5rem -1.1rem rgba(79, 42, 36, 0.24);
   }
 
   @media (max-width: 42rem) {
@@ -235,3 +233,33 @@ const accounts = [profile.x, profile.github].filter(
     }
   }
 </style>
+
+<script>
+  const splitDescription = () => {
+    const target = document.querySelector<HTMLElement>('[data-reveal-split]');
+    if (!target || target.dataset.splitDone) return;
+    target.dataset.splitDone = 'true';
+
+    const text = target.textContent || '';
+    target.textContent = '';
+
+    const frag = document.createDocumentFragment();
+    let index = 0;
+    for (const char of Array.from(text)) {
+      if (char === '\n') {
+        frag.append(document.createElement('br'));
+        continue;
+      }
+      const span = document.createElement('span');
+      span.className = 'reveal-char';
+      span.textContent = char === ' ' ? '\u00A0' : char;
+      span.style.setProperty('--reveal-delay', `${index * 45}ms`);
+      frag.append(span);
+      index += 1;
+    }
+    target.append(frag);
+  };
+
+  splitDescription();
+  document.addEventListener('astro:page-load', splitDescription);
+</script>

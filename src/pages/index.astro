@@ -21,9 +21,15 @@ const notes = (await getCollection('notes')).sort(
     <ProfileCard profile={profile} />
 
     <section class="notes" id="notes" aria-labelledby="notes-title">
-      <div class="section-heading" data-reveal>
-        <p aria-hidden="true">01</p>
-        <h2 id="notes-title">近记</h2>
+      <div class="section-heading">
+        <p aria-hidden="true" data-reveal data-parallax>01</p>
+        <h2
+          id="notes-title"
+          data-reveal
+          class="reveal-curtain"
+          style="--reveal-delay: 80ms">
+          近记
+        </h2>
       </div>
 
       {
@@ -70,6 +76,8 @@ const notes = (await getCollection('notes')).sort(
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.12em;
+    transform: translateY(var(--parallax, 0));
+    will-change: transform;
   }
 
   .section-heading h2 {
@@ -141,3 +149,53 @@ const notes = (await getCollection('notes')).sort(
     }
   }
 </style>
+
+<script>
+  let portrait: HTMLElement | null = null;
+  let marker: HTMLElement | null = null;
+  let markerCenter = 0;
+
+  const cacheScrollNarrative = () => {
+    portrait = document.querySelector<HTMLElement>('.profile__portrait');
+    marker = document.querySelector<HTMLElement>('[data-parallax]');
+
+    if (marker) {
+      const rect = marker.getBoundingClientRect();
+      markerCenter = rect.top + window.scrollY + rect.height / 2;
+    }
+  };
+
+  const updateScrollNarrative = () => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!portrait || !marker) cacheScrollNarrative();
+
+    const y = window.scrollY;
+    if (portrait) portrait.style.setProperty('--ring-rotate', `${y * 0.12}deg`);
+    if (marker) {
+      const offset = markerCenter - y - window.innerHeight / 2;
+      marker.style.setProperty('--parallax', `${offset * -0.06}px`);
+    }
+  };
+
+  let scrollTicking = false;
+  const requestScrollNarrative = () => {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    window.requestAnimationFrame(() => {
+      updateScrollNarrative();
+      scrollTicking = false;
+    });
+  };
+
+  cacheScrollNarrative();
+  updateScrollNarrative();
+  window.addEventListener('scroll', requestScrollNarrative, { passive: true });
+  window.addEventListener('resize', () => {
+    cacheScrollNarrative();
+    requestScrollNarrative();
+  });
+  document.addEventListener('astro:page-load', () => {
+    cacheScrollNarrative();
+    updateScrollNarrative();
+  });
+</script>
