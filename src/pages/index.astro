@@ -22,23 +22,27 @@ const notes = (await getCollection('notes')).sort(
 
     <section class="notes" id="notes" aria-labelledby="notes-title">
       <div class="section-heading">
-        <p aria-hidden="true" data-reveal data-parallax>01</p>
+        <p aria-hidden="true" data-reveal data-parallax style="--reveal-delay: 980ms">
+          01
+        </p>
         <h2
           id="notes-title"
           data-reveal
           class="reveal-curtain"
-          style="--reveal-delay: 80ms">
+          style="--reveal-delay: 980ms">
           近记
         </h2>
       </div>
 
       {
         notes.length === 0 ? (
-          <p class="notes-empty" data-reveal>此间尚无所记。</p>
+          <p class="notes-empty" data-reveal style="--reveal-delay: 1160ms">
+            此间尚无所记。
+          </p>
         ) : (
           <ol class="notes-list">
             {notes.map((note, index) => (
-              <li data-reveal style={`--reveal-delay: ${Math.min(index, 10) * 60}ms`}>
+              <li data-reveal style={`--reveal-delay: ${1160 + Math.min(index, 10) * 60}ms`}>
                 <a href={`/notes/${note.id}/`}>
                   <div>
                     <h3>{note.data.title}</h3>

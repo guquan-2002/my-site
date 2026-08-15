@@ -107,19 +107,45 @@ const personData = {
       <slot />
 
       <footer class="site-footer">
-        <p>© {new Date().getFullYear()} {profile.displayName}</p>
+        <p data-reveal style="--reveal-delay: 1240ms">
+          © {new Date().getFullYear()} {profile.displayName}
+        </p>
         <nav aria-label="页尾链接">
-          {profile.email && <a href={`mailto:${profile.email}`}>邮箱</a>}
+          {profile.email && (
+            <a href={`mailto:${profile.email}`} data-reveal style="--reveal-delay: 1320ms">
+              邮箱
+            </a>
+          )}
           {profile.x?.url && (
-            <a href={profile.x.url} target="_blank" rel="me noreferrer noopener">X</a>
+            <a
+              href={profile.x.url}
+              target="_blank"
+              rel="me noreferrer noopener"
+              data-reveal
+              style="--reveal-delay: 1400ms"
+            >
+              X
+            </a>
           )}
           {profile.github?.url && (
-            <a href={profile.github.url} target="_blank" rel="me noreferrer noopener">
+            <a
+              href={profile.github.url}
+              target="_blank"
+              rel="me noreferrer noopener"
+              data-reveal
+              style="--reveal-delay: 1480ms"
+            >
               GitHub
             </a>
           )}
           {profile.profileUrl && (
-            <a href={profile.profileUrl} target="_blank" rel="me noreferrer noopener">
+            <a
+              href={profile.profileUrl}
+              target="_blank"
+              rel="me noreferrer noopener"
+              data-reveal
+              style="--reveal-delay: 1560ms"
+            >
               Gravatar
             </a>
           )}
@@ -157,6 +183,21 @@ const personData = {
       const setupReveal = () => {
         revealObserver?.disconnect();
         curtainObserver?.disconnect();
+
+        // 首屏内元素按预设的 --reveal-delay 依次出现；首屏外元素进入视口后再
+        // 等 80ms 即可，避免滚动到它们时还要等很久。
+        const vh = window.innerHeight;
+        const reduceOffscreenDelay = (target: Element) => {
+          const el = target as HTMLElement;
+          const delay = Number.parseFloat(el.style.getPropertyValue('--reveal-delay')) || 0;
+          if (delay > 200 && el.getBoundingClientRect().top >= vh) {
+            el.style.setProperty('--reveal-delay', '80ms');
+          }
+        };
+
+        document
+          .querySelectorAll('[data-reveal], [data-reveal-split]')
+          .forEach(reduceOffscreenDelay);
 
         revealObserver = new IntersectionObserver(
           (entries) => {
