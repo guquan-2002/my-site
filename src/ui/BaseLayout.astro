@@ -41,6 +41,7 @@ const personData = {
   description: profile.description,
   sameAs: sameAs.length > 0 ? sameAs : undefined,
 };
+const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
 ---
 
 <!doctype html>
@@ -61,7 +62,7 @@ const personData = {
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@callmebill/lxgw-wenkai-web@latest/style.css"
+      href="https://cdn.jsdelivr.net/npm/@callmebill/lxgw-wenkai-web@1.522.0/style.css"
     />
     {profile.avatarPath && <link rel="icon" href={profile.avatarPath} type="image/png" />}
 
@@ -81,7 +82,7 @@ const personData = {
     <meta name="twitter:image" content={socialImageUrl} />
 
     <title>{title}</title>
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(personData)} />
+    <script is:inline type="application/ld+json" set:html={personDataJson} />
     <ClientRouter />
   </head>
   <body>
