@@ -11,9 +11,9 @@
   --red-pale: #f8dedb;
   --red-wash: rgba(205, 48, 43, 0.12);
   --red-faint: rgba(205, 48, 43, 0.07);
-  --grain-opacity: 0.035;
+  --grain-opacity: 0.023;
   --grain-filter: none;
-  --fiber-opacity: 0.05;
+  --fiber-opacity: 0.033;
   --wash-ink: rgba(32, 33, 30, 0.045);
   --wash-ochre: rgba(168, 96, 44, 0.055);
   --cinnabar-glow: rgba(205, 48, 43, 0.07);
@@ -21,6 +21,11 @@
   --content: 45rem;
   --font-main: "LXGW Wenkai", KaiTi, STKaiti, serif;
   --font-mono: "LXGW WenKai Mono", "LXGW Wenkai", KaiTi, monospace;
+  --motion-ui: 0.2s;
+  --motion-page: 0.28s;
+  --motion-theme: 0.5s;
+  --motion-easing: ease-out;
+  --reveal-duration: 0.32s;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,7 +42,7 @@
     --red-pale: #3d2420;
     --red-wash: rgba(205, 91, 78, 0.14);
     --red-faint: rgba(205, 91, 78, 0.08);
-    --grain-opacity: 0.05;
+    --grain-opacity: 0.033;
     --grain-filter: invert(1);
     --wash-ink: rgba(0, 0, 0, 0.3);
     --wash-ochre: rgba(186, 122, 62, 0.1);
@@ -59,7 +64,7 @@
   --red-pale: #3d2420;
   --red-wash: rgba(205, 91, 78, 0.14);
   --red-faint: rgba(205, 91, 78, 0.08);
-  --grain-opacity: 0.05;
+  --grain-opacity: 0.033;
   --grain-filter: invert(1);
   --wash-ink: rgba(0, 0, 0, 0.3);
   --wash-ochre: rgba(186, 122, 62, 0.1);
@@ -181,32 +186,18 @@ html[data-theme-transition] main {
   view-transition-name: none;
 }
 
+::view-transition-group(*) {
+  animation: none;
+}
+
 ::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.35s;
-  animation-timing-function: ease;
-}
-
 ::view-transition-old(main-content) {
-  animation: vt-main-out 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: fade-out var(--motion-page) var(--motion-easing) both;
 }
 
+::view-transition-new(root),
 ::view-transition-new(main-content) {
-  animation: vt-main-in 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-@keyframes vt-main-out {
-  to {
-    opacity: 0;
-    transform: translateY(-0.6rem);
-  }
-}
-
-@keyframes vt-main-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.6rem);
-  }
+  animation: fade-in var(--motion-page) var(--motion-easing) both;
 }
 
 html[data-theme-transition]::view-transition-old(root) {
@@ -214,97 +205,37 @@ html[data-theme-transition]::view-transition-old(root) {
 }
 
 html[data-theme-transition]::view-transition-new(root) {
-  animation: ink-blot 0.6s cubic-bezier(0.32, 0.72, 0, 1) both;
-}
-
-@keyframes ink-blot {
-  from {
-    clip-path: circle(0 at var(--ink-x, 50%) var(--ink-y, 50%));
-  }
-  to {
-    clip-path: circle(150vmax at var(--ink-x, 50%) var(--ink-y, 50%));
-  }
-}
-
-html.js [data-reveal-split]:not([data-split-done]) {
-  opacity: 0;
+  animation: fade-in var(--motion-theme) var(--motion-easing) both;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   html.js [data-reveal] {
     opacity: 0;
-    translate: 0 0.8rem;
-    filter: blur(0.5rem);
   }
 
   html.js [data-reveal].is-visible {
-    animation: reveal-rise 0.65s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
-
-  html.js [data-reveal].reveal-curtain {
-    clip-path: inset(0 0 100% 0);
-  }
-
-  html.js [data-reveal].reveal-curtain.is-visible {
-    animation: reveal-curtain-rise 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
-
-  html.js [data-reveal-split] .reveal-char {
-    display: inline-block;
-    opacity: 0;
-    translate: 0 0.7em;
-    filter: blur(0.4rem);
-  }
-
-  html.js [data-reveal-split].is-visible .reveal-char {
-    animation: reveal-char-rise 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation: fade-in var(--reveal-duration) var(--motion-easing) both;
     animation-delay: var(--reveal-delay, 0ms);
   }
 }
 
-@keyframes reveal-rise {
+@keyframes fade-in {
   from {
     opacity: 0;
-    translate: 0 0.8rem;
-    filter: blur(0.5rem);
   }
 
   to {
     opacity: 1;
-    translate: 0 0;
-    filter: blur(0);
   }
 }
 
-@keyframes reveal-curtain-rise {
+@keyframes fade-out {
   from {
-    opacity: 0;
-    translate: 0 0.8rem;
-    filter: blur(0.5rem);
-    clip-path: inset(0 0 100% 0);
+    opacity: 1;
   }
 
   to {
-    opacity: 1;
-    translate: 0 0;
-    filter: blur(0);
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-@keyframes reveal-char-rise {
-  from {
     opacity: 0;
-    translate: 0 0.7em;
-    filter: blur(0.4rem);
-  }
-
-  to {
-    opacity: 1;
-    translate: 0 0;
-    filter: blur(0);
   }
 }
 

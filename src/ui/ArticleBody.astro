@@ -2,7 +2,7 @@
 import 'katex/dist/katex.min.css';
 ---
 
-<div class="prose" data-article-body data-reveal>
+<div class="prose" data-article-body data-reveal style="--reveal-delay: 260ms">
   <slot />
 </div>
 
@@ -159,8 +159,8 @@ import 'katex/dist/katex.min.css';
       100% 1px;
     text-decoration: none;
     transition:
-      color 0.2s ease,
-      background-size 0.3s ease;
+      color var(--motion-ui) var(--motion-easing),
+      background-size var(--motion-ui) var(--motion-easing);
   }
 
   .prose a:hover {
@@ -237,9 +237,9 @@ import 'katex/dist/katex.min.css';
     line-height: 1;
     opacity: 0;
     transition:
-      opacity 150ms ease,
-      color 0.2s ease,
-      border-color 0.2s ease;
+      opacity var(--motion-ui) var(--motion-easing),
+      color var(--motion-ui) var(--motion-easing),
+      border-color var(--motion-ui) var(--motion-easing);
   }
 
   .prose .copy-code:hover {

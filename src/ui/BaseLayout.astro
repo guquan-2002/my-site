@@ -62,7 +62,11 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@callmebill/lxgw-wenkai-web@1.522.0/style.css"
+      href="https://cdn.jsdelivr.net/npm/@callmebill/lxgw-wenkai-web@1.522.0/lxgwwenkai-regular/result.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@callmebill/lxgw-wenkai-web@1.522.0/lxgwwenkaimono-regular/result.css"
     />
     {profile.avatarPath && <link rel="icon" href={profile.avatarPath} type="image/png" />}
 
@@ -108,12 +112,12 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
       <slot />
 
       <footer class="site-footer">
-        <p data-reveal style="--reveal-delay: 1240ms">
+        <p data-reveal style="--reveal-delay: 420ms">
           © {new Date().getFullYear()} {profile.displayName}
         </p>
         <nav aria-label="页尾链接">
           {profile.email && (
-            <a href={`mailto:${profile.email}`} data-reveal style="--reveal-delay: 1320ms">
+            <a href={`mailto:${profile.email}`} data-reveal style="--reveal-delay: 460ms">
               邮箱
             </a>
           )}
@@ -123,7 +127,7 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
               target="_blank"
               rel="me noreferrer noopener"
               data-reveal
-              style="--reveal-delay: 1400ms"
+              style="--reveal-delay: 500ms"
             >
               X
             </a>
@@ -134,7 +138,7 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
               target="_blank"
               rel="me noreferrer noopener"
               data-reveal
-              style="--reveal-delay: 1480ms"
+              style="--reveal-delay: 540ms"
             >
               GitHub
             </a>
@@ -145,7 +149,7 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
               target="_blank"
               rel="me noreferrer noopener"
               data-reveal
-              style="--reveal-delay: 1560ms"
+              style="--reveal-delay: 580ms"
             >
               Gravatar
             </a>
@@ -179,68 +183,46 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
 
     <script>
       let revealObserver: IntersectionObserver | null = null;
-      let curtainObserver: IntersectionObserver | null = null;
+      let revealStart = performance.now();
 
+      // 进入视口的元素共享页面入场时间轴；错过预设起点的元素立即开始动画。
+      const revealOnTimeline: IntersectionObserverCallback = (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          const element = entry.target as HTMLElement;
+          const scheduledDelay = Number.parseFloat(
+            element.style.getPropertyValue('--reveal-delay'),
+          ) || 0;
+          const remainingDelay = Math.max(
+            0,
+            scheduledDelay - (performance.now() - revealStart),
+          );
+          element.style.setProperty('--reveal-delay', `${remainingDelay}ms`);
+          element.classList.add('is-visible');
+          observer.unobserve(element);
+        });
+      };
+
+      // 所有内容按相同的可见性条件接入统一淡入的时间轴。
       const setupReveal = () => {
         revealObserver?.disconnect();
-        curtainObserver?.disconnect();
-
-        // 首屏内元素按预设的 --reveal-delay 依次出现；首屏外元素进入视口后再
-        // 等 80ms 即可，避免滚动到它们时还要等很久。
-        const vh = window.innerHeight;
-        const reduceOffscreenDelay = (target: Element) => {
-          const el = target as HTMLElement;
-          const delay = Number.parseFloat(el.style.getPropertyValue('--reveal-delay')) || 0;
-          if (delay > 200 && el.getBoundingClientRect().top >= vh) {
-            el.style.setProperty('--reveal-delay', '80ms');
-          }
-        };
-
-        document
-          .querySelectorAll('[data-reveal], [data-reveal-split]')
-          .forEach(reduceOffscreenDelay);
 
         revealObserver = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                revealObserver?.unobserve(entry.target);
-              }
-            });
-          },
+          revealOnTimeline,
           { rootMargin: '0px 0px 0px 0px', threshold: 0.05 },
         );
 
         document
-          .querySelectorAll(
-            '[data-reveal]:not(.is-visible):not(.reveal-curtain), [data-reveal-split]:not(.is-visible)',
-          )
+          .querySelectorAll('[data-reveal]:not(.is-visible)')
           .forEach((target) => revealObserver?.observe(target));
-
-        // reveal-curtain 初始会被 clip-path 完全裁掉，IntersectionObserver 会因此
-        // 判定为不可见而无法触发。对这类元素改用 threshold: 0 观察，再按 isIntersecting
-        // 决定是否显示，这样 clip-path 裁剪也能正确触发。
-        curtainObserver = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                curtainObserver?.unobserve(entry.target);
-              }
-            });
-          },
-          { rootMargin: '0px 0px 0px 0px', threshold: 0 },
-        );
-
-        document
-          .querySelectorAll(
-            '[data-reveal].reveal-curtain:not(.is-visible)',
-          )
-          .forEach((target) => curtainObserver?.observe(target));
       };
 
       setupReveal();
+      // 页面切换建立新的计时起点；资源加载完成不会重启同一页面的时间轴。
+      document.addEventListener('astro:after-swap', () => {
+        revealStart = performance.now();
+      });
       document.addEventListener('astro:page-load', setupReveal);
 
       // ---- 全局鼠标光晕 ----
@@ -408,7 +390,7 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
       transparent 70%
     );
     opacity: 0;
-    transition: opacity 0.45s ease;
+    transition: opacity var(--motion-ui) var(--motion-easing);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -432,8 +414,8 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
     background: color-mix(in srgb, var(--paper) 94%, transparent);
     border-bottom: 1px solid var(--line);
     transition:
-      background-color 0.3s ease,
-      box-shadow 0.3s ease;
+      background-color var(--motion-ui) var(--motion-easing),
+      box-shadow var(--motion-ui) var(--motion-easing);
   }
 
   .site-header.is-scrolled {
@@ -487,8 +469,8 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
     font-size: 0.9rem;
     text-decoration: none;
     transition:
-      color 0.2s ease,
-      background-size 0.25s ease;
+      color var(--motion-ui) var(--motion-easing),
+      background-size var(--motion-ui) var(--motion-easing);
   }
 
   .site-nav a:hover,
@@ -533,19 +515,16 @@ const personDataJson = JSON.stringify(personData).replace(/</g, '\\u003c');
     cursor: pointer;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(0.6rem);
     transition:
-      opacity 0.3s ease,
-      transform 0.3s ease,
-      visibility 0.3s ease,
-      color 0.2s ease,
-      border-color 0.2s ease;
+      opacity var(--motion-ui) var(--motion-easing),
+      visibility var(--motion-ui) var(--motion-easing),
+      color var(--motion-ui) var(--motion-easing),
+      border-color var(--motion-ui) var(--motion-easing);
   }
 
   .back-to-top.is-visible {
     opacity: 1;
     visibility: visible;
-    transform: none;
   }
 
   .back-to-top:hover {

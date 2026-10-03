@@ -1,23 +1,19 @@
 ---
-import type { Profile, SocialAccount } from '../core/profile';
+import type { Profile } from '../core/profile';
 
 interface Props {
   profile: Profile;
 }
 
 const { profile } = Astro.props;
-const accounts = [profile.x, profile.github].filter(
-  (account): account is SocialAccount => Boolean(account?.url),
-);
 ---
 
 <section class="profile" aria-labelledby="profile-name">
-  <div class="profile__words">
-    <div class="profile__identity">
+  <div class="profile__identity">
+    <div class="profile__name">
       <h1
         id="profile-name"
         data-reveal
-        class="reveal-curtain"
         style="--reveal-delay: 0ms">
         {profile.displayName}
       </h1>
@@ -28,95 +24,63 @@ const accounts = [profile.x, profile.github].filter(
       )}
     </div>
 
-    {profile.description && (
-      <p class="profile__description" data-reveal-split style="--reveal-delay: 210ms">
-        {profile.description}
-      </p>
+    {profile.avatarPath && (
+      <div
+        class="profile__portrait"
+        aria-hidden={!profile.avatarAlt}
+        data-reveal
+        style="--reveal-delay: 40ms"
+      >
+        <img
+          src={profile.avatarPath}
+          width="256"
+          height="256"
+          alt={profile.avatarAlt || ''}
+        />
+      </div>
     )}
-
-    <div class="profile__contact" id="contact" aria-label="联系方式">
-      {profile.email && (
-        <a
-          class="contact-link contact-link--primary"
-          href={`mailto:${profile.email}`}
-          data-reveal
-          style="--reveal-delay: 740ms"
-        >
-          {profile.email}
-        </a>
-      )}
-
-      {(accounts.length > 0 || profile.profileUrl) && (
-        <nav class="profile__links" aria-label="外部主页">
-          {accounts.map((account, accountIndex) => (
-            <a
-              class="contact-link"
-              href={account.url}
-              rel="me noreferrer noopener"
-              target="_blank"
-              data-reveal
-              style={`--reveal-delay: ${800 + accountIndex * 60}ms`}
-            >
-              {account.label}
-              <span aria-hidden="true"> ↗</span>
-            </a>
-          ))}
-          {profile.profileUrl && (
-            <a
-              class="contact-link"
-              href={profile.profileUrl}
-              rel="me noreferrer noopener"
-              target="_blank"
-              data-reveal
-              style={`--reveal-delay: ${800 + accounts.length * 60}ms`}
-            >
-              Gravatar<span aria-hidden="true"> ↗</span>
-            </a>
-          )}
-        </nav>
-      )}
-    </div>
   </div>
 
-  {profile.avatarPath && (
-    <div
-      class="profile__portrait"
-      aria-hidden={!profile.avatarAlt}
-      data-reveal
-      style="--reveal-delay: 140ms"
-    >
-      <img
-        src={profile.avatarPath}
-        width="256"
-        height="256"
-        alt={profile.avatarAlt || ''}
-      />
-    </div>
+  {profile.description && (
+    <p class="profile__description" data-reveal style="--reveal-delay: 80ms">
+      {profile.description}
+    </p>
   )}
+
+  <div class="profile__contact" id="contact" aria-label="联系方式">
+    {profile.email && (
+      <a
+        class="contact-link contact-link--primary"
+        href={`mailto:${profile.email}`}
+        data-reveal
+        style="--reveal-delay: 120ms"
+      >
+        {profile.email}
+      </a>
+    )}
+  </div>
 </section>
 
 <style>
   .profile {
     position: relative;
+    z-index: 1;
+    padding-block: clamp(3rem, 7vw, 4.5rem) clamp(2rem, 4vw, 3rem);
+  }
+
+  .profile__identity {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: clamp(2rem, 8vw, 5.5rem);
     align-items: start;
-    min-height: 34rem;
-    padding-block: clamp(5rem, 13vw, 8.5rem);
   }
 
-  .profile__words {
-    position: relative;
-    z-index: 1;
-    min-width: 0;
-  }
-
-  .profile__identity {
+  .profile__name {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem 1rem;
     align-items: baseline;
+    min-width: 0;
   }
 
   .profile h1 {
@@ -144,7 +108,6 @@ const accounts = [profile.x, profile.github].filter(
 
   .profile__contact {
     display: grid;
-    gap: 1rem;
     margin-top: 3rem;
   }
 
@@ -152,40 +115,34 @@ const accounts = [profile.x, profile.github].filter(
     justify-self: start;
   }
 
-  .profile__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem;
-    align-items: center;
-  }
-
   .contact-link {
-    padding: 0.7rem 0.95rem;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--paper-bright) 64%, transparent);
-    color: var(--ink);
+    color: var(--ink-soft);
     font-size: 0.88rem;
-    line-height: 1;
+    line-height: 1.45;
     text-decoration: none;
-    transition:
-      color 0.2s ease,
-      border-color 0.2s ease,
-      background-color 0.2s ease,
-      translate 0.2s ease;
+    transition: color var(--motion-ui) var(--motion-easing);
   }
 
   .contact-link--primary {
-    border-color: color-mix(in srgb, var(--red) 24%, transparent);
+    padding: 0.7rem 0.95rem;
+    border: 1px solid color-mix(in srgb, var(--red) 24%, transparent);
+    border-radius: 999px;
     background: var(--red-wash);
+    color: var(--ink);
+    line-height: 1;
+    transition:
+      color var(--motion-ui) var(--motion-easing),
+      border-color var(--motion-ui) var(--motion-easing),
+      background-color var(--motion-ui) var(--motion-easing);
   }
 
   .contact-link:hover {
-    border-color: color-mix(in srgb, var(--red) 55%, transparent);
     color: var(--red-deep);
+  }
+
+  .contact-link--primary:hover {
+    border-color: color-mix(in srgb, var(--red) 55%, transparent);
     background: color-mix(in srgb, var(--red) 10%, transparent);
-    box-shadow: 0 0.7rem 1.7rem -0.7rem rgba(167, 56, 53, 0.28);
-    translate: 0 -1px;
   }
 
   .profile__portrait {
@@ -196,12 +153,10 @@ const accounts = [profile.x, profile.github].filter(
 
   .profile__portrait::before {
     position: absolute;
-    inset: -0.55rem;
-    border: 1px dashed color-mix(in srgb, var(--red) 34%, transparent);
+    inset: -0.4rem;
+    border: 1px solid color-mix(in srgb, var(--red) 24%, transparent);
     border-radius: 50%;
     content: '';
-    transform: rotate(var(--ring-rotate, 0deg));
-    will-change: transform;
   }
 
   .profile__portrait img {
@@ -210,22 +165,18 @@ const accounts = [profile.x, profile.github].filter(
     height: clamp(5rem, 11vw, 6.5rem);
     border-radius: 50%;
     object-fit: cover;
-    box-shadow:
-      0 1rem 2rem -0.55rem rgba(79, 42, 36, 0.18),
-      0 2.6rem 5rem -1.1rem rgba(79, 42, 36, 0.24);
+    box-shadow: 0 0.6rem 1.5rem -0.6rem rgba(79, 42, 36, 0.14);
   }
 
   @media (max-width: 42rem) {
-    .profile {
-      grid-template-columns: 1fr;
-      gap: 2.5rem;
-      min-height: 0;
-      padding-block: 4.5rem 5.5rem;
+    .profile__identity {
+      gap: 1.25rem;
+      align-items: center;
     }
 
-    .profile__portrait {
-      grid-row: 1;
-      width: fit-content;
+    .profile__portrait img {
+      width: clamp(4rem, 18vw, 5rem);
+      height: clamp(4rem, 18vw, 5rem);
     }
 
     .profile h1 {
@@ -242,35 +193,3 @@ const accounts = [profile.x, profile.github].filter(
     }
   }
 </style>
-
-<script>
-  const splitDescription = () => {
-    const target = document.querySelector<HTMLElement>('[data-reveal-split]');
-    if (!target || target.dataset.splitDone) return;
-    target.dataset.splitDone = 'true';
-
-    const text = target.textContent || '';
-    target.textContent = '';
-
-    const baseDelay = Number.parseFloat(target.style.getPropertyValue('--reveal-delay')) || 0;
-
-    const frag = document.createDocumentFragment();
-    let index = 0;
-    for (const char of Array.from(text)) {
-      if (char === '\n') {
-        frag.append(document.createElement('br'));
-        continue;
-      }
-      const span = document.createElement('span');
-      span.className = 'reveal-char';
-      span.textContent = char === ' ' ? '\u00A0' : char;
-      span.style.setProperty('--reveal-delay', `${baseDelay + index * 45}ms`);
-      frag.append(span);
-      index += 1;
-    }
-    target.append(frag);
-  };
-
-  splitDescription();
-  document.addEventListener('astro:page-load', splitDescription);
-</script>

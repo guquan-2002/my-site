@@ -38,16 +38,16 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
         <a class="back-link" href="/#notes" data-reveal>
           <span aria-hidden="true">←</span> 近记
         </a>
-        <h1 data-reveal class="reveal-curtain" style="--reveal-delay: 70ms">{note.data.title}</h1>
+        <h1 data-reveal style="--reveal-delay: 40ms">{note.data.title}</h1>
         <time
           datetime={note.data.date.toISOString()}
           data-reveal
-          style="--reveal-delay: 140ms"
+          style="--reveal-delay: 80ms"
         >
           {formatDate(note.data.date)}
         </time>
         {note.data.summary && (
-          <p data-reveal style="--reveal-delay: 200ms">{note.data.summary}</p>
+          <p data-reveal style="--reveal-delay: 120ms">{note.data.summary}</p>
         )}
       </header>
 
@@ -116,7 +116,7 @@ const description = note.data.summary || `${profile.displayName}的近记。${no
     color: var(--red-deep);
     font-size: 0.9rem;
     text-decoration: none;
-    transition: background-size 0.25s ease;
+    transition: background-size var(--motion-ui) var(--motion-easing);
   }
 
   .back-link:hover {

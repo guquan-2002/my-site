@@ -22,27 +22,26 @@ const notes = (await getCollection('notes')).sort(
 
     <section class="notes" id="notes" aria-labelledby="notes-title">
       <div class="section-heading">
-        <p aria-hidden="true" data-reveal data-parallax style="--reveal-delay: 980ms">
+        <p aria-hidden="true" data-reveal style="--reveal-delay: 200ms">
           01
         </p>
         <h2
           id="notes-title"
           data-reveal
-          class="reveal-curtain"
-          style="--reveal-delay: 980ms">
+          style="--reveal-delay: 200ms">
           近记
         </h2>
       </div>
 
       {
         notes.length === 0 ? (
-          <p class="notes-empty" data-reveal style="--reveal-delay: 1160ms">
+          <p class="notes-empty" data-reveal style="--reveal-delay: 280ms">
             此间尚无所记。
           </p>
         ) : (
           <ol class="notes-list">
             {notes.map((note, index) => (
-              <li data-reveal style={`--reveal-delay: ${1160 + Math.min(index, 10) * 60}ms`}>
+              <li data-reveal style={`--reveal-delay: ${280 + Math.min(index, 4) * 30}ms`}>
                 <a href={`/notes/${note.id}/`}>
                   <div>
                     <h3>{note.data.title}</h3>
@@ -80,8 +79,6 @@ const notes = (await getCollection('notes')).sort(
     font-family: var(--font-mono);
     font-size: 0.7rem;
     letter-spacing: 0.12em;
-    transform: translateY(var(--parallax, 0));
-    will-change: transform;
   }
 
   .section-heading h2 {
@@ -124,14 +121,11 @@ const notes = (await getCollection('notes')).sort(
     margin: 0;
     font-size: 1.3rem;
     font-weight: 600;
-    transition:
-      color 0.25s ease,
-      translate 0.25s ease;
+    transition: color var(--motion-ui) var(--motion-easing);
   }
 
   .notes-list a:hover h3 {
     color: var(--red-deep);
-    translate: 0.3rem 0;
   }
 
   .notes-list p {
@@ -153,53 +147,3 @@ const notes = (await getCollection('notes')).sort(
     }
   }
 </style>
-
-<script>
-  let portrait: HTMLElement | null = null;
-  let marker: HTMLElement | null = null;
-  let markerCenter = 0;
-
-  const cacheScrollNarrative = () => {
-    portrait = document.querySelector<HTMLElement>('.profile__portrait');
-    marker = document.querySelector<HTMLElement>('[data-parallax]');
-
-    if (marker) {
-      const rect = marker.getBoundingClientRect();
-      markerCenter = rect.top + window.scrollY + rect.height / 2;
-    }
-  };
-
-  const updateScrollNarrative = () => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!portrait || !marker) cacheScrollNarrative();
-
-    const y = window.scrollY;
-    if (portrait) portrait.style.setProperty('--ring-rotate', `${y * 0.12}deg`);
-    if (marker) {
-      const offset = markerCenter - y - window.innerHeight / 2;
-      marker.style.setProperty('--parallax', `${offset * -0.06}px`);
-    }
-  };
-
-  let scrollTicking = false;
-  const requestScrollNarrative = () => {
-    if (scrollTicking) return;
-    scrollTicking = true;
-    window.requestAnimationFrame(() => {
-      updateScrollNarrative();
-      scrollTicking = false;
-    });
-  };
-
-  cacheScrollNarrative();
-  updateScrollNarrative();
-  window.addEventListener('scroll', requestScrollNarrative, { passive: true });
-  window.addEventListener('resize', () => {
-    cacheScrollNarrative();
-    requestScrollNarrative();
-  });
-  document.addEventListener('astro:page-load', () => {
-    cacheScrollNarrative();
-    updateScrollNarrative();
-  });
-</script>
